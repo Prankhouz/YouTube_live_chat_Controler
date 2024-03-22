@@ -18,9 +18,10 @@ def set_leds(led_indices, color,timehere):
 
     # Check if the request was successful
     if response.status_code == 200:
-        print(f"Set color {color} for LEDs {led_indices} successfully!")
+        #print(f"Set color {color} for LEDs {led_indices} successfully!")
+        pass
     else:
-        print(f"Failed to set color for LEDs {led_indices}. Status code: {response.status_code}")
+        #print(f"Failed to set color for LEDs {led_indices}. Status code: {response.status_code}")
         return False
     
     time.sleep(timehere)
@@ -37,7 +38,7 @@ def set_leds(led_indices, color,timehere):
         #print("Turned off all LEDs successfully!")
         return True
     else:
-        print(f"Failed to turn off all LEDs. Status code: {response.status_code}")
+        #print(f"Failed to turn off all LEDs. Status code: {response.status_code}")
         return False
 
 

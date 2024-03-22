@@ -13,9 +13,8 @@ YOUTUBE_API_SERVICE_NAME = 'youtube'
 YOUTUBE_API_VERSION = 'v3'
 
 # Initialize a list of commands or keywords to look for in chat messages
-commands = ["!desk_","!bubbles"]
-desk_timeouts = {"!desk_": datetime.now() - timedelta(minutes=5)}
-Bubbles_timeouts = {"!bubbles": datetime.now() - timedelta(minutes=10)}
+commands = ["!desk_"]
+desk_timeouts = {"!desk_": datetime.now() - timedelta(minutes=5)}  # Initialize with a past time
 
 
 def get_live_chat_id(video_id):
@@ -58,10 +57,9 @@ def print_live_chat_messages(live_chat_id):
             for command in commands:
                 if command in message_text:
                     current_time = datetime.now()
-                    superchat_bypass_desk = is_superchat and command == "!desk_"
-                    superchat_bypass_Bubbles = is_superchat and command == "!bubbles"
+                    superchat_bypass = is_superchat and command == "!desk_"
 
-                    if (current_time - desk_timeouts[command] >= timedelta(minutes=5)) or superchat_bypass_desk:
+                    if (current_time - desk_timeouts[command] >= timedelta(minutes=5)) or superchat_bypass:
                         match = re.search(rf"{command}(\d+)", message_text)
                         if match:
                             print(f"Found the command {command} with number: {match.group(1)} in the message.")
@@ -71,14 +69,6 @@ def print_live_chat_messages(live_chat_id):
                                 desk_timeouts[command] = current_time
                             else:
                                 print(f"{int(match.group(1))} is not between 71 and 110.")
-
-                    if (current_time - Bubbles_timeouts[command] >= timedelta(minutes=5)) or superchat_bypass_Bubbles:
-                        match = re.search(rf"{command}(\d+)", message_text)
-                        if match:
-                            print(f"Found the command {command} with number: {match.group(1)} in the message.")
-
-                    
-
 
         time.sleep(15)
         request = youtube.liveChatMessages().list_next(request, response)
