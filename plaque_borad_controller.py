@@ -2,6 +2,7 @@ import requests
 import time
 
 def set_leds(led_indices, color,timehere):
+    led_indices_new = list(map(int, led_indices.split(',')))
     api_endpoint = f"http://192.168.1.14/json/state"
     payload = {
         "seg": {
@@ -10,7 +11,7 @@ def set_leds(led_indices, color,timehere):
     }
 
     # Construct the payload to set the color of each LED
-    for index in led_indices:
+    for index in led_indices_new:
         payload["seg"]["i"].extend([index, color])
 
     # Send the API request to set the colors of the LEDs
@@ -18,16 +19,16 @@ def set_leds(led_indices, color,timehere):
 
     # Check if the request was successful
     if response.status_code == 200:
-        #print(f"Set color {color} for LEDs {led_indices} successfully!")
+        #print(f"Set color {color} for LEDs {led_indices_new} successfully!")
         pass
     else:
-        #print(f"Failed to set color for LEDs {led_indices}. Status code: {response.status_code}")
+        #print(f"Failed to set color for LEDs {led_indices_new}. Status code: {response.status_code}")
         return False
     
     time.sleep(timehere)
     
     # Construct the payload to turn off the LEDs
-    for index in led_indices:
+    for index in led_indices_new:
         payload["seg"]["i"].extend([index, "000000"])
 
     # Send the API request to turn off all LEDs
@@ -42,6 +43,6 @@ def set_leds(led_indices, color,timehere):
         return False
 
 
-#set_leds([86,85,84,99,100,101], "d900ff",5)
+#set_leds('86,85,84,99,100,101', "d900ff",5)
 
 
