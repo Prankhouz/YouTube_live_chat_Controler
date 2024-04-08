@@ -55,7 +55,7 @@ def adjust_desk_height(desired_height):
 
         print("Success! The height has been adjusted.")
 
+    # Call the control_desk function twice with a 1-second sleep between the calls
     control_desk(STOP_ENTITY_ID, SET_HEIGHT_ENTITY_ID, desired_height)
-
-
-Bubbles()
+    time.sleep(1)
+    control_desk(STOP_ENTITY_ID, SET_HEIGHT_ENTITY_ID, desired_height)
