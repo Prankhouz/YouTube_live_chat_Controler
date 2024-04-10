@@ -17,19 +17,11 @@ def control_switch(entity_id, state):
     return requests.post(url, headers=HEADERS, json=data).status_code
 
 def Bubbles():
-    entity_id = 'switch.bubble_machine_bubble_machine'
+    entity_id = 'switch.bubble_machine_bubble_machine_10s'
     print("Turning on the switch...")
     if control_switch(entity_id, True) == 200:
         print("Switch turned on successfully.")
-        time.sleep(15)  # Wait for 10 seconds
 
-        print("Turning off the switch...")
-        if control_switch(entity_id, False) == 200:
-            print("Switch turned off successfully.")
-        else:
-            print("Error turning off the switch.")
-    else:
-        print("Error turning on the switch.")
 
 def adjust_desk_height(desired_height):
     STOP_ENTITY_ID = "cover.desk_desk"

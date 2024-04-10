@@ -2,6 +2,7 @@ import requests
 import time
 
 def set_leds(led_indices, color,timehere):
+    
     led_indices_new = list(map(int, led_indices.split(',')))
     api_endpoint = f"http://192.168.1.14/json/state"
     payload = {
@@ -12,7 +13,7 @@ def set_leds(led_indices, color,timehere):
 
     # Construct the payload to set the color of each LED
     for index in led_indices_new:
-        payload["seg"]["i"].extend([index, color])
+        payload["seg"]["i"].extend([index, color[1:]])
 
     # Send the API request to set the colors of the LEDs
     response = requests.post(api_endpoint, json=payload)
@@ -43,6 +44,5 @@ def set_leds(led_indices, color,timehere):
         return False
 
 
-#set_leds('86,85,84,99,100,101', "d900ff",5)
-
+#set_leds('86,85,84,99,100,101', "#f6de15",5)
 

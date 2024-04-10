@@ -127,7 +127,7 @@ def print_live_chat_messages(live_chat_id):
                     print(person_info)
                     threading.Thread(
                         target=plaque_borad_controller.set_leds,
-                        args=(person_info[4], person_info[3], 10)
+                        args=(person_info[2], person_info[1], 10)
                     ).start()
 
                 for command in commands.keys():
