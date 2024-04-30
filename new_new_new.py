@@ -24,6 +24,7 @@ def handle_desk_command(match, is_superchat, command_info, display_name):
         desk_height = int(match.group(1))
         if 71 <= desk_height <= 120:
             print(f"{desk_height} is between 71 and 110. By user: {display_name}")
+            print(int(match.group(1)))
             homeassistant_controls.adjust_desk_height(int(match.group(1)))
             command_info["last_used"] = datetime.now()  # Update the timeout start only if valid
         else:
