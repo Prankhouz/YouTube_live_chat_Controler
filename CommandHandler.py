@@ -48,7 +48,7 @@ commands = {
         "action": handle_bubbles_command
     },
     "!Sound_": {
-        "timeout": {"regular": timedelta(minutes=5), "patron": timedelta(minutes=1), "superchat": timedelta(seconds=0)},
+        "timeout": {"regular": timedelta(minutes=0), "patron": timedelta(minutes=0), "superchat": timedelta(seconds=0)},
         "access_level": "patron",
         "action": handle_sound_command
     }

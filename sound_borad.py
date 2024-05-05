@@ -10,7 +10,9 @@ pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=4096)
 sounds = {
     "applause": "sounds/claps.mp3",
     "boo": "sounds/boo.mp3",
-    "mc": "sounds/mc.MP3"
+    "mc": "sounds/mc.MP3",
+    "isthewindowopen": "sounds/isthewindowopen.mp3",
+    "crunch": "sounds/crunch.mp3"
     # Add more sounds here
 }
 
