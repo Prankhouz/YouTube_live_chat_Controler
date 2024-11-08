@@ -1,13 +1,15 @@
 import requests
 import time
 import pyttsx3
+import Secrets
 
 def set_leds(led_indices, color,timehere):
     
     led_indices_new = list(map(int, led_indices.split(',')))
-    api_endpoint = f"http://192.168.1.14/json/state"
+    api_endpoint = f"" + str(Secrets.BOARD_IP) + "/json/state"
     payload = {
         "seg": {
+            "id": 0,
             "i": []
         }
     }
