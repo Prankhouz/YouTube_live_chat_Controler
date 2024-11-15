@@ -33,13 +33,14 @@ def print_live_chat_messages(live_chat_id):
                 message_text = item['snippet']['displayMessage']
                 display_name = item['authorDetails']['displayName']
                 is_superchat = item['snippet'].get('superChatDetails') is not None
+                #print("User " + display_name + " just said: " + message_text)
                 if is_superchat:
                     CommandHandler.handle_bubbles_command(None, is_superchat, CommandHandler.commands["!bubbles"], display_name)
                 person_info = check_name_in_data(display_name)
                 if person_info:
                     threading.Thread(target=plaque_borad_controller.set_leds, args=(person_info[2], person_info[1], 10)).start()
                 for command in CommandHandler.commands.keys():
-                    if command in message_text:
+                    if command in message_text.lower():
                         CommandHandler.execute_command(command, message_text, is_superchat, display_name, check_name_in_data)
                         break
         time.sleep(15)
