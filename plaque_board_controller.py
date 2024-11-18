@@ -31,9 +31,13 @@ def set_leds(led_indices, color,timehere):
     
     time.sleep(timehere)
     
-    # Construct the payload to turn off the LEDs
-    for index in led_indices_new:
-        payload["seg"]["i"].extend([index, "000000"])
+    # Payload to return to previous effect
+    payload = {
+        "seg": {
+            "id": 0,
+            "frz": False
+        }
+    }
 
     # Send the API request to turn off all LEDs
     try:
