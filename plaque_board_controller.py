@@ -50,5 +50,3 @@ def set_leds(led_indices, color,timehere):
         #print(f"Turned off the leds")
         return True
 
-
-#set_leds('86,85,84,99,100,101', "#f6de15",5)
