@@ -1,7 +1,7 @@
 import re
 from datetime import datetime, timedelta
 import homeassistant_controls
-import sound_borad
+import sound_board
 
 access_hierarchy = ['regular', 'patron', 'superchat']
 

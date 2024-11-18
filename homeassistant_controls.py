@@ -1,10 +1,10 @@
 import requests
 import time
-import Secrets
+import secrets
 
 # Home Assistant details
-ACCESS_TOKEN = Secrets.ACCESS_TOKEN
-HA_URL = Secrets.HA_URL
+ACCESS_TOKEN = secrets.ACCESS_TOKEN
+HA_URL = secrets.HA_URL
 HEADERS = {
     'Authorization': f'Bearer {ACCESS_TOKEN}',
     'Content-Type': 'application/json',
