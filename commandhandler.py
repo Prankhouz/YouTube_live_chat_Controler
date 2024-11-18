@@ -32,7 +32,7 @@ def handle_sound_command(match, is_superchat, command_info, display_name):
         print(sound_effect)
         print(f"Playing sound: {sound_effect} for {display_name}")
         # Assuming a function `play_sound` that plays the sound effect
-        sound_borad.play_sound(sound_effect)
+        sound_board.play_sound(sound_effect)
         command_info["last_used"] = datetime.now()
 
 

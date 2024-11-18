@@ -11,14 +11,13 @@ sounds = {
     "applause": "sounds/claps.mp3",
     "boo": "sounds/boo.mp3",
     "mc": "sounds/mc.MP3",
-    "isthewindowopen": "sounds/isthewindowopen.mp3",
-    "crunch": "sounds/crunch.mp3"
-    "itsfine": "sounds/itsfine.mp3"
-    "subscribe": "sounds/subscribe.mp3"
-    "ifallgoeswell": "sounds/ifallgoeswell.mp3"
-    "therewego": "sounds/therewego.mp3"
-    "howdoiusethis": "sounds/howdoiusethis.mp3"
-    "wobble": "sounds/wobble.mp3"
+    "crunch": "sounds/crunch.mp3",
+    "itsfine": "sounds/itsfine.mp3",
+    "subscribe": "sounds/subscribe.mp3",
+    "ifallgoeswell": "sounds/ifallgoeswell.mp3",
+    "therewego": "sounds/therewego.mp3",
+    "howdoiusethis": "sounds/howdoiusethis.mp3",
+    "wobble": "sounds/wobble.mp3",
     "taskcomplete": "sounds/taskcomplete.mp3"
     # Add more sounds here
 }
