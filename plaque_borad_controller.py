@@ -6,7 +6,7 @@ import Secrets
 def set_leds(led_indices, color,timehere):
     
     led_indices_new = list(map(int, led_indices.split(',')))
-    api_endpoint = f"" + str(secrets.BOARD_IP) + "/json/state"
+    api_endpoint = f"" + str(Secrets.BOARD_IP) + "/json/state"
     payload = {
         "seg": {
             "id": 0,
