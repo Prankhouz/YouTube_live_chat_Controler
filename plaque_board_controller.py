@@ -3,16 +3,12 @@ import time
 import pyttsx3
 import secrets
 
-def set_leds(led_indices, color,timehere):
-    
-    led_indices_new = list(map(int, led_indices.split(',')))
+
+def set_leds(led_indices, color, timehere):
+
+    led_indices_new = list(map(int, led_indices.split(",")))
     api_endpoint = f"" + str(secrets.BOARD_IP) + "/json/state"
-    payload = {
-        "seg": {
-            "id": 0,
-            "i": []
-        }
-    }
+    payload = {"seg": {"id": 0, "i": []}}
 
     # Construct the payload to set the color of each LED
     for index in led_indices_new:
@@ -26,18 +22,13 @@ def set_leds(led_indices, color,timehere):
         print(f"Failed to set color for LEDs {led_indices_new}. Error: {e}")
         return False
     else:
-        #print(f"Set color {color} for LEDs {led_indices_new} successfully!")
+        # print(f"Set color {color} for LEDs {led_indices_new} successfully!")
         pass
-    
+
     time.sleep(timehere)
-    
+
     # Payload to return to previous effect
-    payload = {
-        "seg": {
-            "id": 0,
-            "frz": False
-        }
-    }
+    payload = {"seg": {"id": 0, "frz": False}}
 
     # Send the API request to turn off all LEDs
     try:
@@ -47,6 +38,5 @@ def set_leds(led_indices, color,timehere):
         print(f"An error occurred: {e}")
         return False
     else:
-        #print(f"Turned off the leds")
+        # print(f"Turned off the leds")
         return True
-

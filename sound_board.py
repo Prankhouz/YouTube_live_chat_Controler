@@ -18,21 +18,22 @@ sounds = {
     "therewego": "sounds/therewego.mp3",
     "howdoiusethis": "sounds/howdoiusethis.mp3",
     "wobble": "sounds/wobble.mp3",
-    "taskcomplete": "sounds/taskcomplete.mp3"
+    "taskcomplete": "sounds/taskcomplete.mp3",
     # Add more sounds here
 }
+
 
 def play_sound(sound_name):
     try:
         # Retrieve the file path from the dictionary using the sound name
         sound_file = sounds[sound_name]
-        
+
         # Load the sound
         sound = pygame.mixer.Sound(sound_file)
-        
+
         # Play the sound
         sound.play()
-        
+
         # Wait for the sound to finish playing
         while pygame.mixer.get_busy():
             pygame.time.wait(100)
