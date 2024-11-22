@@ -1,4 +1,4 @@
-import sqlite3
+import json
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import time
@@ -8,21 +8,19 @@ import commandhandler
 import plaque_board_controller
 
 
-def get_database_connection():
-    connection = sqlite3.connect("database.db")
-    return connection
+def load_json_data():
+    with open("data.json", "r") as file:
+        return json.load(file)
 
 
 def check_name_in_data(display_name):
     if not display_name:
         return None
-    connection = get_database_connection()
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM supporter_data WHERE YT_Name = ?", (display_name,))
-    person = cursor.fetchone()
-    cursor.close()
-    connection.close()
-    return person
+    data = load_json_data()
+    for person in data:
+        if person["YT_Name"] == display_name:
+            return person
+    return None
 
 
 def print_live_chat_messages(live_chat_id):
@@ -50,7 +48,7 @@ def print_live_chat_messages(live_chat_id):
                 if person_info:
                     threading.Thread(
                         target=plaque_board_controller.set_leds,
-                        args=(person_info[2], person_info[1], 10),
+                        args=(person_info["Leds"], person_info["Leds_colour"], 10),
                     ).start()
                 for command in commandhandler.commands.keys():
                     if command in message_text.lower():
