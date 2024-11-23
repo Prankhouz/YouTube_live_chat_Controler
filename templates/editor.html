@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supporter Data Editor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <form method="post">
+            <input type="text" name="YT_Name" placeholder="YT Name" required>
+            <input type="color" name="Leds_colour" placeholder="Leds Colour" required>
+            <input type="text" name="Leds" placeholder="Leds (comma-separated)" required>
+            <button type="submit" class="btn btn-primary">Create New Entry</button>
+        </form>
+        <hr>
+        <table class="table table-bordered mt-4">
+            <thead>
+                <tr>
+                    <th>YT Name</th>
+                    <th>Leds Colour</th>
+                    <th>Leds</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr data-bs-toggle="modal" data-bs-target="#editModal" 
+                    data-ytname="{{ row.YT_Name }}" 
+                    data-ledscolour="{{ row.Leds_colour }}" 
+                    data-leds="{{ row.Leds }}">
+                    <td>{{ row.YT_Name }}</td>
+                    <td style="background-color: {{ row.Leds_colour }}">{{ row.Leds_colour }}</td>
+                    <td>{{ row.Leds }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="editForm" method="post" action="{{ url_for('edit') }}">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">Edit Entry</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="original_YT_Name" id="original_YT_Name">
+                        <div class="mb-3">
+                            <label for="YT_Name" class="form-label">YT Name</label>
+                            <input type="text" name="YT_Name" id="YT_Name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="Leds_colour" class="form-label">Leds Colour</label>
+                            <input type="color" name="Leds_colour" id="Leds_colour" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="Leds" class="form-label">Leds</label>
+                            <input type="text" name="Leds" id="Leds" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Save Changes</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <form id="deleteForm" method="post" action="{{ url_for('delete') }}" class="d-inline">
+                            <input type="hidden" name="YT_Name" id="delete_YT_Name">
+                            <button type="button" class="btn btn-danger" id="deleteButton">Delete</button>
+                        </form>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</body>
+<!-- Place the script at the end of the body -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM fully loaded and parsed');
+
+    const editModal = document.getElementById('editModal');
+    if (!editModal) {
+        console.error('Modal element not found!');
+        return;
+    }
+
+    // Handle modal opening and populate values
+    editModal.addEventListener('show.bs.modal', function (event) {
+        const row = event.relatedTarget; // Row that triggered the modal
+        const original_YT_Name = row.getAttribute('data-ytname');
+        const leds_colour = row.getAttribute('data-ledscolour');
+        const leds = row.getAttribute('data-leds');
+
+        // Debug logging for attributes
+        console.log('Row attributes:', { original_YT_Name, leds_colour, leds });
+
+        // Populate modal inputs
+        document.getElementById('original_YT_Name').value = original_YT_Name;
+        document.getElementById('YT_Name').value = original_YT_Name;
+        document.getElementById('Leds_colour').value = leds_colour;
+        document.getElementById('Leds').value = leds;
+
+        // Ensure the delete form and delete button are accessible
+        const delete_YT_Name = document.getElementById('delete_YT_Name');
+        if (delete_YT_Name) {
+            delete_YT_Name.value = original_YT_Name;
+        } else {
+            console.error('Delete input element not found!');
+        }
+
+        // Add delete confirmation
+        const deleteButton = document.getElementById('deleteButton');
+        if (deleteButton) {
+            // Attach the delete confirmation event only when the modal is shown
+            deleteButton.removeEventListener('click', deleteConfirmationHandler); // Ensure old listeners are removed
+            deleteButton.addEventListener('click', deleteConfirmationHandler);
+        } else {
+            console.error('Delete button not found!');
+        }
+    });
+
+    // Confirmation and deletion process
+    function deleteConfirmationHandler() {
+        const ytName = document.getElementById('delete_YT_Name').value;
+        const confirmationMessage = `Do you really want to delete ${ytName}?`;
+
+        if (confirm(confirmationMessage)) {
+            // Send the DELETE request to Flask
+            fetch('/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ YT_Name: ytName }), // Send YT_Name in JSON format
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Close the modal after successful deletion (without jQuery)
+                    const modal = new bootstrap.Modal(document.getElementById('editModal'));
+                    modal.hide(); // Close the modal
+                    location.reload(); // Reload the page to reflect the changes
+                } else {
+                    alert('Failed to delete entry.');
+                }
+            })
+            .catch(error => {
+                console.error('Error during deletion:', error);
+            });
+        }
+    }
+});
+    </script>
+</html>

@@ -1,4 +1,4 @@
 secrets.py
 database.db
-sample_Secrets.py
 *.pyc
+.vscode
