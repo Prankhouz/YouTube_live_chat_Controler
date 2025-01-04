@@ -19,20 +19,33 @@
                     <th>YT Name</th>
                     <th>Leds Colour</th>
                     <th>Leds</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for row in data %}
-                <tr data-bs-toggle="modal" data-bs-target="#editModal" 
+                <tr 
+                    onclick="openEditor(this)" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#editModal" 
                     data-ytname="{{ row.YT_Name }}" 
                     data-ledscolour="{{ row.Leds_colour }}" 
                     data-leds="{{ row.Leds }}">
                     <td>{{ row.YT_Name }}</td>
                     <td style="background-color: {{ row.Leds_colour }}">{{ row.Leds_colour }}</td>
                     <td>{{ row.Leds }}</td>
+                    <td>
+                        <button class="btn btn-light" onclick="triggerLeds('{{ row.YT_Name }}', event)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lightbulb" viewBox="0 0 16 16">
+                                <path d="M2 6a6 6 0 1 1 12 0c0 2.57-1.392 4.69-3.214 5.757-.229.13-.438.303-.61.508-.198.24-.392.554-.59.95H6.414c-.198-.396-.392-.71-.59-.95a2.954 2.954 0 0 0-.61-.508C3.392 10.69 2 8.57 2 6z"/>
+                                <path d="M5.405 13.91c-.367.35-.674.768-.674 1.09 0 .57.354 1 .854 1h5.43c.5 0 .854-.43.854-1 0-.322-.307-.74-.674-1.09H5.405z"/>
+                            </svg>
+                        </button>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
+                       
         </table>
     </div>
 
@@ -152,4 +165,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
     </script>
+
+<script>
+    function triggerLeds(ytName) {
+        fetch("/trigger_leds", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ YT_Name: ytName, time: 5 }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                echo(`LEDs for ${ytName} have been triggered!`);
+            } else {
+                alert(`Failed to trigger LEDs: ${data.message || "Unknown error"}`);
+            }
+        })
+        .catch(error => {
+            console.error("Error triggering LEDs:", error);
+            alert("An error occurred while triggering LEDs.");
+        });
+    }
+    </script>
+    
+
 </html>

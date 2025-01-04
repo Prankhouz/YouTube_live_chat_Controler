@@ -16,7 +16,7 @@
     },
     {
         "YT_Name": "TestUser",
-        "Leds_colour": "#f53dfa",
-        "Leds": "44,55"
+        "Leds_colour": "#4657f4",
+        "Leds": "1,2,3,4"
     }
 ]

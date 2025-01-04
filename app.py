@@ -1,10 +1,19 @@
 from flask import Flask, request, render_template, redirect, url_for, jsonify
 import json
 import os
+from plaque_board_controller import set_leds
 
 app = Flask(__name__)
 
 DATA_FILE = "data.json"
+SECRETS_FILE = 'secrets.json'
+
+# Function to load data from JSON
+def load_secrets():
+    if not os.path.exists(SECRETS_FILE):
+        return []  # Return empty list if file does not exist
+    with open(SECRETS_FILE, "r") as file:
+        return json.load(file)
 
 # Function to load data from JSON
 def load_data():
@@ -83,6 +92,22 @@ def delete():
 
     return jsonify({"status": "success"})
 
+@app.route("/trigger_leds", methods=["POST"])
+def trigger_leds():
+    yt_name = request.json.get("YT_Name")
+    timehere = request.json.get("time", 5)  # Default duration of 5 seconds
+
+    # Load data to find the matching row
+    data = load_data()
+    for entry in data:
+        if entry["YT_Name"] == yt_name:
+            leds_colour = entry["Leds_colour"]
+            leds = entry["Leds"]
+            success = set_leds(leds, leds_colour, timehere)
+            return jsonify({"status": "success" if success else "failure"})
+
+    return jsonify({"status": "error", "message": "YT_Name not found"}), 404
 
 if __name__ == "__main__":
+    secrets = load_secrets()
     app.run(host="0.0.0.0", port=8090, debug=True)
