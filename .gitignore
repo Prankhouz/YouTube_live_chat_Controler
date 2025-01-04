@@ -2,3 +2,5 @@ secrets.py
 database.db
 *.pyc
 .vscode
+data.json
+secrets.json
