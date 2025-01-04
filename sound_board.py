@@ -1,7 +1,7 @@
 import pygame
 import os
 
-os.environ["SDL_AUDIODRIVER"] = "dummy"
+#os.environ["SDL_AUDIODRIVER"] = "dummy" (Only needed when running in VS Code Server (in VS Studio this needs to be commented))
 
 # Initialize Pygame
 pygame.init()

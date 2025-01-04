@@ -74,21 +74,53 @@ def print_live_chat_messages(live_chat_id):
 
 
 def get_live_chat_id(video_id):
-    youtube = build("youtube", "v3", developerKey=secrets.API_KEY)
-    request = youtube.videos().list(part="liveStreamingDetails", id=video_id)
-    response = request.execute()
-    liveChatId = (
-        response.get("items", [])[0]
-        .get("liveStreamingDetails", {})
-        .get("activeLiveChatId")
-    )
-    return liveChatId
+    """
+    Fetch the live chat ID for the given video using YouTube API.
+    Falls back to API_KEY_Backup if the primary key fails.
+
+    :param video_id: The ID of the YouTube video.
+    :return: The live chat ID if found, or None otherwise.
+    """
+    api_keys = [secrets.API_KEY, secrets.API_KEY_Backup]
+    last_exception = None
+
+    for api_key in api_keys:
+        try:
+            youtube = build("youtube", "v3", developerKey=api_key)
+            request = youtube.videos().list(part="liveStreamingDetails", id=video_id)
+            response = request.execute()
+            live_chat_id = (
+                response.get("items", [])[0]
+                .get("liveStreamingDetails", {})
+                .get("activeLiveChatId")
+            )
+            if live_chat_id:
+                print(f"Successfully retrieved live chat ID using API key: {api_key}")
+                return live_chat_id
+        except HttpError as e:
+            last_exception = e
+            print(f"API key {api_key} failed with error: {e}")
+        except Exception as e:
+            last_exception = e
+            print(f"Unexpected error with API key {api_key}: {e}")
+
+    # If all API keys fail
+    if last_exception:
+        print(f"All API keys failed. Last error: {last_exception}")
+    return None
 
 
 if __name__ == "__main__":
-    live_chat_id = get_live_chat_id(secrets.VIDEO_ID)
-    if live_chat_id:
-        print(f"Found live chat for video {secrets.VIDEO_ID}. Printing messages...")
-        print_live_chat_messages(live_chat_id)
-    else:
-        print("Live chat not found for this video.")
+    try:
+        live_chat_id = get_live_chat_id(secrets.VIDEO_ID)
+        if live_chat_id:
+            print(f"Found live chat for video {secrets.VIDEO_ID}. Printing messages...")
+            print_live_chat_messages(live_chat_id)
+        else:
+            print("Live chat not found for this video.")
+    except KeyboardInterrupt:
+        print("Program interrupted by user.")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+    finally:
+        print("Exiting program.")
