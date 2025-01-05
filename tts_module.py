@@ -9,6 +9,7 @@ tts_queue = queue.Queue()
 def create_engine():
     """Create a new pyttsx3 engine instance."""
     engine = pyttsx3.init()
+    engine.setProperty("voice", 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_EN-US_DAVID_11.0')
     return engine
 
 def _tts_worker():
@@ -49,3 +50,20 @@ _worker_thread.start()
 
 # Register cleanup for the worker thread
 atexit.register(stop_tts_worker)
+
+# Debugging section for testing
+if __name__ == "__main__":
+    import time
+
+    # Add test messages
+    gotts("This is the first test message.")
+    time.sleep(1)
+    gotts("This is the second test message.")
+    time.sleep(1)
+    gotts("This is the third test message.")
+
+    # Keep the script running to process the queue
+    while not tts_queue.empty():
+        time.sleep(0.5)
+
+    print("All messages processed. Exiting.")

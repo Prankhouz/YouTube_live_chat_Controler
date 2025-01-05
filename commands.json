@@ -1,0 +1,62 @@
+{
+    "!bubbles": {
+        "enabled": true,
+        "timeout": 37,
+        "access_level": "patreon"
+    },
+    "!sound_applause": {
+        "enabled": true,
+        "timeout": 48,
+        "access_level": "regular"
+    },
+    "!sound_boo": {
+        "enabled": true,
+        "timeout": 10,
+        "access_level": "regular"
+    },
+    "!sound_crunch": {
+        "enabled": true,
+        "timeout": 30,
+        "access_level": "regular"
+    },
+    "!desk": {
+        "enabled": false,
+        "timeout": 30,
+        "access_level": "patreon"
+    },
+    "!sound_itsfine": {
+        "enabled": true,
+        "timeout": 10,
+        "access_level": "regular"
+    },
+    "!sound_subscribe": {
+        "enabled": true,
+        "timeout": 60,
+        "access_level": "regular"
+    },
+    "!sound_ifallgoeswell": {
+        "enabled": true,
+        "timeout": 10,
+        "access_level": "regular"
+    },
+    "!sound_therewego": {
+        "enabled": true,
+        "timeout": 10,
+        "access_level": "regular"
+    },
+    "!sound_howdoiusethis": {
+        "enabled": true,
+        "timeout": 10,
+        "access_level": "regular"
+    },
+    "!sound_wobble": {
+        "enabled": true,
+        "timeout": 10,
+        "access_level": "regular"
+    },
+    "!sound_taskcomplete": {
+        "enabled": true,
+        "timeout": 10,
+        "access_level": "regular"
+    }
+}
