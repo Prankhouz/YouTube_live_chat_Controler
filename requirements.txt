@@ -12,8 +12,6 @@ googleapis-common-protos==1.66.0
 gTTS==2.5.4
 httplib2==0.22.0
 idna==3.10
-proto-plus==1.25.0
-protobuf==5.29.2
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
 PyAudio==0.2.14
@@ -26,3 +24,4 @@ requests==2.32.3
 rsa==4.9
 uritemplate==4.1.1
 urllib3==2.3.0
+flask==3.0.3

@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, redirect, url_for, jsonify
 import json
 import os
 from plaque_board_controller import set_leds
+import commandhandler
 
 app = Flask(__name__)
 
@@ -107,7 +108,7 @@ def test_commands():
     command_input = request.form['command_input']
     commands = load_commands()
     if command_input in commands:
-        execute_command(command_input, "Test User")
+        commandhandler.execute_command(command_input, "Test User")
     else:
         print(f"Command '{command_input}' not recognized.")
     return redirect(url_for('manage_commands'))
@@ -193,6 +194,10 @@ def trigger_leds():
             return jsonify({"status": "success" if success else "failure"})
 
     return jsonify({"status": "error", "message": "YT_Name not found"}), 404
+
+def run():
+    secrets = load_secrets()
+    app.run(host="0.0.0.0", port=8091, debug=False)
 
 if __name__ == "__main__":
     secrets = load_secrets()

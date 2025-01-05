@@ -1,59 +1,52 @@
 import requests
 import time
-import secrets
+import json
+import os
+
+# Load secrets from the JSON file
+SECRETS_FILE = 'secrets.json'
+
+def load_secrets():
+    if not os.path.exists(SECRETS_FILE):
+        raise FileNotFoundError(f"Secrets file '{SECRETS_FILE}' not found.")
+    with open(SECRETS_FILE, 'r') as file:
+        return json.load(file)
+
+# Load secrets
+secrets = load_secrets()
 
 # Home Assistant details
-ACCESS_TOKEN = secrets.ACCESS_TOKEN
-HA_URL = secrets.HA_URL
+ACCESS_TOKEN = secrets['access_token']
+HA_URL = secrets['ha_url']
 HEADERS = {
-    "Authorization": f"Bearer {ACCESS_TOKEN}",
-    "Content-Type": "application/json",
+    'Authorization': f'Bearer {ACCESS_TOKEN}',
+    'Content-Type': 'application/json',
 }
 
-
-def control_switch(entity_id, state):
-    service = "turn_on" if state else "turn_off"
-    url = f"{HA_URL}/api/services/switch/{service}"
-    data = {"entity_id": entity_id}
-    return requests.post(url, headers=HEADERS, json=data).status_code
-
+def call_ha_service(service, data):
+    url = f"{HA_URL}/api/services/{service}"
+    response = requests.post(url, headers=HEADERS, json=data)
+    if response.status_code == 200:
+        print(f"Service '{service}' called successfully.")
+    else:
+        print(f"Error calling service '{service}': {response.text}")
 
 def Bubbles():
-    entity_id = "switch.bubble_machine_bubble_machine_10s"
-    print("Turning on the switch...")
-    if control_switch(entity_id, True) == 200:
-        print("Switch turned on successfully.")
-
+    entity_id = 'switch.bubble_machine_bubble_machine_10s'
+    print("Turning on the bubble machine...")
+    call_ha_service('switch/turn_on', {"entity_id": entity_id})
 
 def adjust_desk_height(desired_height):
     STOP_ENTITY_ID = "cover.desk_desk"
     SET_HEIGHT_ENTITY_ID = "number.desk_desk_height"
 
     def control_desk(stop_entity_id, set_height_entity_id, height):
-        stop_data = {"entity_id": stop_entity_id}
-        stop_response = requests.post(
-            f"{HA_URL}/api/services/cover/stop_cover", json=stop_data, headers=HEADERS
-        )
-
-        if stop_response.status_code != 200:
-            print(f"Error stopping the cover: {stop_response.text}")
-            return
-
-        print("Success! The cover has been stopped.")
+        print("Stopping the desk...")
+        call_ha_service('cover/stop_cover', {"entity_id": stop_entity_id})
         time.sleep(1)  # Wait for a moment before setting the height
 
-        set_height_data = {"entity_id": set_height_entity_id, "value": height}
-        set_height_response = requests.post(
-            f"{HA_URL}/api/services/number/set_value",
-            json=set_height_data,
-            headers=HEADERS,
-        )
-
-        if set_height_response.status_code != 200:
-            print(f"Error setting the height: {set_height_response.text}")
-            return
-
-        print("Success! The height has been adjusted.")
+        print("Setting the desk height...")
+        call_ha_service('number/set_value', {"entity_id": set_height_entity_id, "value": height})
 
     # Call the control_desk function twice with a 1-second sleep between the calls
     control_desk(STOP_ENTITY_ID, SET_HEIGHT_ENTITY_ID, desired_height)
