@@ -4,3 +4,4 @@ database.db
 .vscode
 data.json
 secrets.json
+commands.json
