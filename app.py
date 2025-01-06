@@ -9,6 +9,7 @@ app = Flask(__name__)
 DATA_FILE = "data.json"
 SECRETS_FILE = 'secrets.json'
 COMMANDS_FILE = 'commands.json'
+TASKS_FILE = "tasks.json"
 
 def load_commands():
     with open(COMMANDS_FILE, 'r') as file:
@@ -30,6 +31,16 @@ def load_secrets():
 def save_secrets(secrets):
     with open(SECRETS_FILE, 'w') as file:
         json.dump(secrets, file, indent=4)
+
+def load_file(file_path, default_data=None):
+    if not os.path.exists(file_path):
+        return default_data or {}
+    with open(file_path, "r") as file:
+        return json.load(file)
+
+def save_file(file_path, data):
+    with open(file_path, "w") as file:
+        json.dump(data, file, indent=4)
 
 # Function to load data from JSON
 def load_data():
@@ -66,6 +77,109 @@ def update_data(yt_name, leds_colour, leds):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     return render_template('index.html')
+
+# Data loaders and savers
+def load_tasks():
+    return load_file(TASKS_FILE, {"main_tasks": [], "side_tasks": []})
+
+def save_tasks(tasks):
+    save_file(TASKS_FILE, tasks)
+
+# Route for managing tasks
+@app.route('/manage_tasks', methods=['GET'])
+def manage_tasks():
+    tasks = load_tasks()
+    return render_template('manage_tasks.html', tasks=tasks)
+
+# API endpoint for adding a new task
+@app.route('/add_task', methods=['POST'])
+def add_task():
+    task_name = request.json.get('task_name')
+    task_type = request.json.get('task_type', 'main_tasks')
+
+    tasks = load_tasks()
+    if len(tasks.get(task_type, [])) >= 10:
+        return jsonify({"status": "failure", "message": "Maximum of 10 tasks allowed per category"}), 400
+
+    tasks[task_type].append({"name": task_name, "completed": False})
+    save_tasks(tasks)
+    return jsonify({"status": "success"})
+
+@app.route('/edit_task', methods=['POST'])
+def edit_task():
+    data = request.json
+    task_name = data.get('task_name')
+    new_name = data.get('new_name')
+    task_type = data.get('task_type')
+
+    tasks = load_tasks()
+
+    # Ensure task_type is valid
+    if task_type not in tasks:
+        return jsonify({"status": "failure", "message": "Invalid task type"}), 400
+
+    task_list = tasks.get(task_type, [])
+    
+    # Find and update the task
+    task_found = False
+    for task in task_list:
+        if task["name"] == task_name:
+            task["name"] = new_name
+            task_found = True
+            break
+    
+    if not task_found:
+        return jsonify({"status": "failure", "message": "Task not found"}), 404
+
+    save_tasks(tasks)
+    return jsonify({"status": "success", "message": f"Task '{task_name}' updated to '{new_name}'."})
+
+
+
+# API endpoint for deleting a task
+@app.route('/delete_task', methods=['POST'])
+def delete_task():
+    task_name = request.json.get('task_name')
+    task_type = request.json.get('task_type')
+
+    tasks = load_tasks()
+    tasks[task_type] = [task for task in tasks.get(task_type, []) if task["name"] != task_name]
+    save_tasks(tasks)
+    return jsonify({"status": "success"})
+
+@app.route('/toggle_task_completion', methods=['POST'])
+def toggle_task_completion():
+    task_name = request.json.get('task_name')
+    task_type = request.json.get('task_type')
+
+    tasks = load_tasks()
+    task_list = tasks.get(task_type)
+
+    if not task_list:
+        return jsonify({"status": "failure", "message": "Invalid task type"}), 400
+
+    task = next((t for t in task_list if t["name"] == task_name), None)
+    if not task:
+        return jsonify({"status": "failure", "message": "Task not found"}), 404
+
+    # Toggle 'completed' status, adding it if missing
+    task["completed"] = not task.get("completed", False)
+    save_tasks(tasks)
+
+    return jsonify({"status": "success", "task": task})
+
+@app.route("/tasks", methods=["GET"])
+def tasks():
+    # Load tasks from the JSON file
+    tasks = load_tasks()
+    return render_template("tasks.html", main_tasks=tasks.get('main_tasks', []), side_tasks=tasks.get('side_tasks', []))
+
+#checking tasks
+@app.route('/tasks.json')
+def get_tasks():
+    with open('tasks.json', 'r') as file:
+        tasks = json.load(file)
+    return jsonify(tasks)
 
 @app.route('/secrets', methods=['GET', 'POST'])
 def manage_secrets():

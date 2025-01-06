@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Viewer</title>
+    <style>
+        body {
+            font-family: "Comic Sans MS", "Comic Sans";
+            background-color: #1a1a1a31;
+            color: #000000;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            overflow: hidden;
+        }
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            text-align: left;
+            padding: 10px;
+            box-sizing: border-box;
+            overflow-y: auto; /* Allow scrolling if necessary */
+        }
+        .section {
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        .section-title {
+            font-size: 24px; /* Fixed size for section titles */
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-decoration: underline;
+        }
+        .task {
+            margin: 5px 0; /* Adjust margin for tasks */
+            white-space: nowrap; /* Prevent text from breaking into multiple lines */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Truncate text if it's too long */
+        }
+        .task.completed {
+            color: #242424;
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="section" id="main-tasks">
+            <div class="section-title">Main Quests:</div>
+            {% if main_tasks %}
+                {% for task in main_tasks %}
+                <div class="task {{ 'completed' if task.completed }}" data-text="{{ task.name }}">
+                    {{ task.name }}
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No main quests available.</p>
+            {% endif %}
+        </div>
+        {% if side_tasks %}
+        <div class="section" id="side-tasks">
+            <div class="section-title">Side Quests:</div>
+                {% for task in side_tasks %}
+                <div class="task {{ 'completed' if task.completed }}" data-text="{{ task.name }}">
+                    {{ task.name }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    <script>
+        function resizeFont() {
+            const tasks = document.querySelectorAll('.task');
+            const container = document.querySelector('.container');
+            const containerWidth = container.offsetWidth;
+            const containerHeight = container.offsetHeight;
+            const taskCount = tasks.length || 1; // Avoid division by zero
+
+            // Calculate font size based on available height and width
+            let fontSizeBasedOnHeight = (containerHeight / (taskCount + 2)) * 0.6; // Scale based on total tasks and spacing
+            let fontSizeBasedOnWidth = (containerWidth / 15); // Scale based on the width of the container
+
+            // Choose the smaller of the two to ensure text fits
+            let fontSize = Math.min(fontSizeBasedOnHeight, fontSizeBasedOnWidth);
+
+            // Set a minimum font size to avoid text being too small
+            fontSize = Math.max(fontSize, 10); // Minimum font size to avoid being too small
+
+            tasks.forEach(task => {
+                task.style.fontSize = `${fontSize}px`;
+
+                // Check if text overflows the width of the container
+                let taskWidth = task.offsetWidth;
+                while (taskWidth > containerWidth && fontSize > 10) {
+                    fontSize -= 1; // Reduce font size if text overflows
+                    task.style.fontSize = `${fontSize}px`;
+                    taskWidth = task.offsetWidth; // Recalculate width after resizing
+                }
+            });
+        }
+
+        // Call the resize function on load and when the window is resized
+        window.addEventListener('load', resizeFont);
+        window.addEventListener('resize', resizeFont);
+
+        // Refresh the page every 10 seconds (10000 milliseconds)
+        setInterval(function() {
+            location.reload();
+        }, 10000);
+    </script>
+</body>
+</html>

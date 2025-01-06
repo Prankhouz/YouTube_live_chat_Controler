@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Task Manager</h1>
+
+        <!-- Add Task Button - Disabled conditionally -->
+        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addTaskModal" id="addTaskBtn" {% if tasks.main_tasks|length + tasks.side_tasks|length >= 10 %}disabled style="opacity: 0.5;"{% endif %}>
+            Add Task
+        </button>
+
+        <h2>Main Tasks</h2>
+        <form id="taskForm">
+            <ul class="list-group mb-4">
+                {% for task in tasks.main_tasks %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <input 
+                        type="text" 
+                        class="form-control me-2 {{ 'text-decoration-line-through' if task.completed else '' }}" 
+                        value="{{ task.name }}" 
+                        data-task-type="main_tasks" 
+                        data-original-name="{{ task.name }}" 
+                        onblur="submitEditOnBlur(this, 'main_tasks')">
+                    <div>
+                        <button class="btn btn-sm btn-secondary" type="button" onclick="toggleCompletion('{{ task.name }}', 'main_tasks')">
+                            {{ 'Mark Incomplete' if task.completed else 'Mark Complete' }}
+                        </button>
+                        <button class="btn btn-sm btn-danger" type="button" onclick="confirmDelete('{{ task.name }}', 'main_tasks')">Delete</button>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <h2>Side Tasks</h2>
+            <ul class="list-group mb-4">
+                {% for task in tasks.side_tasks %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <input 
+                        type="text" 
+                        class="form-control me-2 {{ 'text-decoration-line-through text-muted' if task.completed else '' }}" 
+                        value="{{ task.name }}" 
+                        data-task-type="side_tasks" 
+                        data-original-name="{{ task.name }}" 
+                        onblur="submitEditOnBlur(this, 'side_tasks')">
+                    <div>
+                        <button class="btn btn-sm btn-secondary" type="button" onclick="toggleCompletion('{{ task.name }}', 'side_tasks')">
+                            {{ 'Mark Incomplete' if task.completed else 'Mark Complete' }}
+                        </button>
+                        <button class="btn btn-sm btn-danger" type="button" onclick="confirmDelete('{{ task.name }}', 'side_tasks')">Delete</button>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </form>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addTaskModalLabel">Add Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addTaskForm">
+                        <div class="mb-3">
+                            <label for="task_name" class="form-label">Task Name</label>
+                            <input type="text" id="task_name" name="task_name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="task_type" class="form-label">Task Type</label>
+                            <select id="task_type" name="task_type" class="form-select">
+                                <option value="main_tasks">Main Task</option>
+                                <option value="side_tasks">Side Task</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="addTask()">Add Task</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function addTask() {
+            const taskName = document.getElementById('task_name').value;
+            const taskType = document.getElementById('task_type').value;
+
+            fetch('/add_task', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task_name: taskName, task_type: taskType }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+
+        function toggleCompletion(taskName, taskType) {
+            fetch('/toggle_task_completion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task_name: taskName, task_type: taskType }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    location.reload();
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                alert(`An error occurred: ${error}`);
+            });
+        }
+
+        function confirmDelete(taskName, taskType) {
+            if (confirm(`Are you sure you want to delete the task "${taskName}"?`)) {
+                fetch('/delete_task', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ task_name: taskName, task_type: taskType }),
+                })
+                .then(response => response.json())
+                .then(() => location.reload());
+            }
+        }
+
+        function submitEditOnBlur(input, taskType) {
+            const originalName = input.dataset.originalName.trim(); // Ensure no extra spaces
+            const updatedName = input.value.trim();
+
+            if (originalName === updatedName) {
+                return; // Do nothing if the name hasn't changed
+            }
+
+            console.log({
+                original_name: originalName,
+                updated_name: updatedName,
+                task_type: taskType
+            }); // Log the data being sent
+
+            fetch('/edit_task', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    task_name: originalName,
+                    new_name: updatedName,
+                    task_type: taskType
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    input.dataset.originalName = updatedName; // Update original name
+                } else {
+                    console.error(`Error: ${data.message}`);
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error("Error updating task:", error);
+            });
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
