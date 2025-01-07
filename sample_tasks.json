@@ -1,0 +1,18 @@
+{
+    "main_tasks": [
+        {
+            "name": "Task 1",
+            "completed": false
+        },
+        {
+            "name": "Task 2",
+            "completed": false
+        }
+    ],
+    "side_tasks": [
+        {
+            "name": "Task 3",
+            "completed": false
+        }
+    ]
+}
