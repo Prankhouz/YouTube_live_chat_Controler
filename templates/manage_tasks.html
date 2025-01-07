@@ -8,6 +8,23 @@
 </head>
 <body>
     <div class="container mt-4">
+        <!-- Button to trigger "Back to Home" -->
+        <a href="{{ url_for('index') }}" class="btn btn-outline-primary mb-3">
+            Home
+        </a>
+        <a href="{{ url_for('editor') }}" class="btn btn-outline-secondary mb-3">
+            PlaqueBoard
+        </a>
+        <a href="{{ url_for('manage_secrets') }}" class="btn btn-outline-secondary mb-3">
+            Secrets
+        </a>
+        <a href="{{ url_for('manage_commands') }}" class="btn btn-outline-secondary mb-3">
+            Commands
+        </a>
+        <a href="{{ url_for('manage_tasks') }}" class="btn btn-outline-secondary mb-3">
+            Quests
+        </a>
+
         <h1>Task Manager</h1>
 
         <!-- Add Task Button - Disabled conditionally -->

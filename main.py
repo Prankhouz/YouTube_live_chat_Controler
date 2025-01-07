@@ -3,6 +3,7 @@ from flask import Flask, request, render_template, redirect, url_for, jsonify
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import time
+import logging
 import threading
 import commandhandler
 import plaque_board_controller
@@ -10,6 +11,8 @@ from tts_module import gotts
 import app
 
 SECRETS_FILE = 'secrets.json'
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 def load_secrets():
     with open(SECRETS_FILE, 'r') as file:
