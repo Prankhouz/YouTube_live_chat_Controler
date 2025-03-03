@@ -18,7 +18,7 @@ def load_secrets():
 secrets = load_secrets()
 
 def load_json_data():
-    with open("data.json", "r") as file:
+    with open("plaques.json", "r") as file:
         return json.load(file)
 
 
@@ -58,11 +58,8 @@ def print_live_chat_messages(live_chat_id):
                         # Handle bubbles command for superchat
                         commandhandler.execute_command("!bubbles", display_name, is_superchat=True)
 
-                    # Check if user is in database
-                    person_info = check_name_in_data(display_name)
-                    if person_info:
-                        # Start thread to run plaque_board_controller.set_leds
-                        threading.Thread(target=plaque_board_controller.set_leds, args=(person_info[2], person_info[1], 10)).start()
+                    # Trigger LEDs for the user if they have a plaque
+                    threading.Thread(target=plaque_board_controller.set_leds_for_user, args=(display_name,)).start()
 
                     # Handle commands
                     commands = app.load_commands()

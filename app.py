@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for, jsonify
+from flask import Flask, request, render_template, redirect, url_for, jsonify, send_from_directory
 import json
 import os
 from plaque_board_controller import set_leds
@@ -9,6 +9,7 @@ app = Flask(__name__)
 DATA_FILE = "data.json"
 SECRETS_FILE = 'secrets.json'
 COMMANDS_FILE = 'commands.json'
+PLAQUES_FILE = 'plaques.json'
 
 def load_commands():
     with open(COMMANDS_FILE, 'r') as file:
@@ -181,19 +182,72 @@ def delete():
 
 @app.route("/trigger_leds", methods=["POST"])
 def trigger_leds():
-    yt_name = request.json.get("YT_Name")
-    timehere = request.json.get("time", 5)  # Default duration of 5 seconds
+    try:
+        print("DEBUG: trigger_leds endpoint called")
+        if os.path.exists(PLAQUES_FILE):
+            with open(PLAQUES_FILE, 'r') as f:
+                plaques = json.load(f)
+                print(f"DEBUG: Loaded {len(plaques)} plaques from file")
+        else:
+            plaques = []
+            print("DEBUG: No plaques file found")
 
-    # Load data to find the matching row
-    data = load_data()
-    for entry in data:
-        if entry["YT_Name"] == yt_name:
-            leds_colour = entry["Leds_colour"]
-            leds = entry["Leds"]
-            success = set_leds(leds, leds_colour, timehere)
-            return jsonify({"status": "success" if success else "failure"})
+        data = request.json
+        yt_name = data.get('YT_Name')
+        duration = data.get('time', 3)
+        print(f"DEBUG: Searching for user: {yt_name}, duration: {duration}")
+        
+        matching_plaque = None
+        for plaque in plaques:
+            plaque_name = plaque.get('YT_Name')
+            print(f"DEBUG: Checking plaque with YT_Name: {plaque_name}")
+            if plaque_name and plaque_name.lower() == yt_name.lower():
+                matching_plaque = plaque
+                print("DEBUG: Found matching plaque!")
+                break
+        
+        if matching_plaque:
+            color = matching_plaque.get('Leds_colour', '#FFFFFF')
+            color = color.lstrip('#')
+            r, g, b = tuple(int(color[i:i+2], 16) for i in (0, 2, 4))
+            
+            leds = matching_plaque.get('Leds', '')
+            print(f"DEBUG: Attempting to trigger LEDs - Color: #{color}, Leds: {leds}")
+            
+            try:
+                set_leds(leds, (r, g, b), duration)
+                print("DEBUG: LED control successful")
+                return jsonify({"status": "success"})
+            except Exception as e:
+                print(f"DEBUG: LED control error: {str(e)}")
+                return jsonify({"status": "error", "message": f"LED control error: {str(e)}"}), 500
+        else:
+            print(f"DEBUG: No matching plaque found for user: {yt_name}")
+            return jsonify({"status": "error", "message": f"No plaque found for user: {yt_name}"}), 404
+            
+    except Exception as e:
+        print(f"DEBUG: Unexpected error in trigger_leds: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
-    return jsonify({"status": "error", "message": "YT_Name not found"}), 404
+# New plaque-related routes
+@app.route('/plaques', methods=['GET'])
+def get_plaques():
+    if os.path.exists(PLAQUES_FILE):
+        with open(PLAQUES_FILE, 'r') as f:
+            data = json.load(f)
+        return jsonify(data)
+    return jsonify([])
+
+@app.route('/plaques', methods=['POST'])
+def save_plaques():
+    data = request.get_json()
+    with open(PLAQUES_FILE, 'w') as f:
+        json.dump(data, f, indent=2)
+    return jsonify({"status": "success"})
+
+@app.route('/plaque-editor')
+def plaque_editor():
+    return render_template('plaques.html')
 
 def run():
     secrets = load_secrets()

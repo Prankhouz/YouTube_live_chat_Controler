@@ -1,287 +1,632 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Supporter Data Editor</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <meta charset="UTF-8">
+    <title>Plaque Grid Editor</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f6fa;
+            --border-color: #dcdde1;
+            --text-color: #2f3640;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--secondary-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        #toolbar {
+            margin-bottom: 20px;
+        }
+
+        #grid {
+            position: relative;
+            width: 750px;  /* 15 columns * 50px */
+            height: 500px; /* 10 rows * 50px */
+            display: grid;
+            grid-template-columns: repeat(15, 50px);
+            grid-template-rows: repeat(10, 50px);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: white;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .grid-cell {
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #a4b0be;
+        }
+
+        .plaque {
+            position: absolute;
+            background: rgba(74, 144, 226, 0.2);
+            border: 2px solid var(--primary-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            overflow: hidden;
+            cursor: text;
+            box-shadow: var(--shadow);
+            padding: 4px;
+            font-size: 14px;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .plaque:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .edit-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            z-index: 10;
+            font-size: 12px;
+            padding: 4px 8px;
+            cursor: pointer;
+            background: white;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            border-radius: 4px;
+            opacity: 0.8;
+            transition: all 0.2s ease;
+        }
+
+        .edit-btn:hover {
+            opacity: 1;
+            background: var(--primary-color);
+            color: white;
+        }
+
+        #plaquePalette {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: white;
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 10px;
+            justify-content: center; /* Add this line to center the buttons */
+            align-items: center;    /* Add this line to vertically center */
+        }
+
+        #plaquePalette button {
+            padding: 8px 16px;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #plaquePalette button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        #plaqueList {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: white;
+            box-shadow: var(--shadow);
+        }
+
+        #plaqueList div {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        #plaqueList .field-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        #plaqueList input[type="text"] {
+            padding: 4px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            width: 120px;
+        }
+
+        #plaqueList input[type="color"] {
+            width: 40px;
+            height: 24px;
+            padding: 0;
+            border: none;
+            border-radius: 4px;
+        }
+
+        #plaqueList .button-group {
+            display: flex;
+            gap: 4px;
+            margin-left: auto;
+        }
+
+        #plaqueList button {
+            padding: 4px 8px;
+            min-width: 60px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        #plaqueList button#save-\\d+ {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        #plaqueList button#delete-\\d+ {
+            background: #e74c3c;
+            color: white;
+        }
+
+        #plaqueList button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+    </style>
 </head>
 <body>
+    <!-- NEW: Navigation buttons added from index.html -->
     <div class="container mt-4">
-        <!-- Button to trigger "Back to Home" -->
-        <a href="{{ url_for('index') }}" class="btn btn-outline-primary mb-3">
-            Home
-        </a>
-        <a href="{{ url_for('editor') }}" class="btn btn-outline-secondary mb-3">
-            PlaqueBoard
-        </a>
-        <a href="{{ url_for('manage_secrets') }}" class="btn btn-outline-secondary mb-3">
-            Secrets
-        </a>
-        <a href="{{ url_for('manage_commands') }}" class="btn btn-outline-secondary mb-3">
-            Commands
-        </a>
-     
-        
-        <hr>
-
-        <table class="table table-bordered mt-4">
-            <thead>
-                <tr>
-                    <th>YT Name</th>
-                    <th>Leds Colour</th>
-                    <th>Leds</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in data %}
-                <tr
-                    data-bs-toggle="modal"
-                    data-bs-target="#editModal"
-                    data-ytname="{{ row.YT_Name }}"
-                    data-ledscolour="{{ row.Leds_colour }}"
-                    data-leds="{{ row.Leds }}">
-                    <td>{{ row.YT_Name }}</td>
-                    <td style="background-color: {{ row.Leds_colour }}">{{ row.Leds_colour }}</td>
-                    <td>{{ row.Leds }}</td>
-                    <td>
-                        <button class="btn btn-light" onclick="triggerLeds('{{ row.YT_Name }}', event)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lightbulb" viewBox="0 0 16 16">
-                                <path d="M2 6a6 6 0 1 1 12 0c0 2.57-1.392 4.69-3.214 5.757-.229.13-.438.303-.61.508-.198.24-.392.554-.59.95H6.414c-.198-.396-.392-.71-.59-.95a2.954 2.954 0 0 0-.61-.508C3.392 10.69 2 8.57 2 6z"/>
-                                <path d="M5.405 13.91c-.367.35-.674.768-.674 1.09 0 .57.354 1 .854 1h5.43c.5 0 .854-.43.854-1 0-.322-.307-.74-.674-1.09H5.405z"/>
-                            </svg>
-                        </button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createModal">
-            Create New Entry
-        </button>
+        <a href="{{ url_for('index') }}" class="btn btn-outline-primary mb-3">Home</a>
+        <a href="{{ url_for('editor') }}" class="btn btn-outline-secondary mb-3">PlaqueBoard</a>
+        <a href="{{ url_for('manage_secrets') }}" class="btn btn-outline-secondary mb-3">Secrets</a>
+        <a href="{{ url_for('manage_commands') }}" class="btn btn-outline-secondary mb-3">Commands</a>
     </div>
-
-    <!-- Edit Modal -->
-    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="editForm" method="post" action="{{ url_for('edit') }}">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editModalLabel">Edit Entry</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" name="original_YT_Name" id="original_YT_Name">
-                        <div class="mb-3">
-                            <label for="YT_Name" class="form-label">YT Name</label>
-                            <input type="text" name="YT_Name" id="YT_Name" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="Leds_colour" class="form-label">Leds Colour</label>
-                            <div class="d-flex align-items-center gap-2">
-                                <input type="text" id="Leds_colour_hex_Edit" class="form-control" required maxlength="7" placeholder="#FFFFFF" style="width: 30%;">
-                                <input type="color" name="Leds_colour" id="Leds_colour_Edit" class="form-control form-control-color" required style="width: 70%;">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="Leds" class="form-label">Leds</label>
-                            <input type="text" name="Leds" id="Leds" class="form-control" required>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">Save Changes</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <form id="deleteForm" method="post" action="{{ url_for('delete') }}" class="d-inline">
-                            <input type="hidden" name="YT_Name" id="delete_YT_Name">
-                            <button type="button" class="btn btn-danger" id="deleteButton">Delete</button>
-                        </form>
-                    </div>
-                </form>
-            </div>
-        </div>
+    <div id="toolbar">
+        <!-- Removed Save/Load buttons and file input -->
     </div>
-
-    <!-- Create Modal (Empty form for new entry) -->
-    <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="createForm" method="post" action="{{ url_for('editor') }}">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="createModalLabel">Create New Entry</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="YT_Name" class="form-label">YT Name</label>
-                            <input type="text" name="YT_Name" id="YT_Name" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="Leds_colour" class="form-label">Leds Colour</label>
-                            <div class="d-flex align-items-center gap-2">
-                                <input type="text" id="Leds_colour_hex_Create" class="form-control" required maxlength="7" value="#ffffff" style="width: 30%;">
-                                <input type="color" name="Leds_colour" id="Leds_colour_Create" class="form-control form-control-color" required style="width: 70%;">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="Leds" class="form-label">Leds</label>
-                            <input type="text" name="Leds" id="Leds" class="form-control" required>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">Create</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+    <!-- NEW: Palette buttons to add plaques and list display -->
+    <div id="plaquePalette">
+        <!-- Buttons will appear here -->
     </div>
+    <div id="plaqueList">
+        <!-- Plaque details list -->
+    </div>
+    <div id="grid"></div>
 
-</body>
-<!-- Place the script at the end of the body -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('DOM fully loaded and parsed');
-
-        const colorInputEdit = document.getElementById('Leds_colour_Edit');
-        const colorHexInputEdit = document.getElementById('Leds_colour_hex_Edit');
-
-        // Function to synchronize color picker and hex input
-        function syncColorInputsEdit() {
-            // When color picker changes, update the hex input
-            colorInputEdit.addEventListener('input', () => {
-                colorHexInputEdit.value = colorInputEdit.value; // Update the hex input
-            });
-
-            // When hex input changes, update the color picker
-            colorHexInputEdit.addEventListener('input', () => {
-                const hexRegex = /^#[0-9A-Fa-f]{6}$/; // Validate hex code format
-                if (hexRegex.test(colorHexInputEdit.value)) {
-                    colorInputEdit.value = colorHexInputEdit.value; // Update the color picker
+    <script>
+        (function() {
+            const grid = document.getElementById('grid');
+            const plaquePalette = document.getElementById('plaquePalette');
+            const plaqueListContainer = document.getElementById('plaqueList');
+            const rows = 10, cols = 15;
+            const cellSize = 50; // pixels per grid cell
+            
+            // Global array to store plaque details.
+            const plaques = []; // Each entry: {id, plaqueType, name, YT_Name, twitchusername, Leds_colour, pos: {left, top}, Leds: "" }
+            let plaqueIdCounter = 0;
+            
+            // Occupancy grid remains (for grid display when plaques are moved).
+            window.occupancy = Array.from({ length: rows }, () => Array(cols).fill(false));
+            
+            // Render grid cells.
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.innerText = r * cols + c; // Display cell number
+                    grid.appendChild(cell);
                 }
-            });
-        }
-
-        syncColorInputsEdit(); // Call it for both the edit and create modals
-
-
-        const colorInputCreate = document.getElementById('Leds_colour_Create');
-        const colorHexInputCreate = document.getElementById('Leds_colour_hex_Create');
-
-        // Function to synchronize color picker and hex input
-        function syncColorInputsCreate() {
-            // When color picker changes, update the hex input
-            colorInputCreate.addEventListener('input', () => {
-                colorHexInputCreate.value = colorInputCreate.value; // Update the hex input
-            });
-
-            // When hex input changes, update the color picker
-            colorHexInputCreate.addEventListener('input', () => {
-                const hexRegex = /^#[0-9A-Fa-f]{6}$/; // Validate hex code format
-                if (hexRegex.test(colorHexInputCreate.value)) {
-                    colorInputCreate.value = colorHexInputCreate.value; // Update the color picker
-                }
-            });
-        }
-
-        syncColorInputsCreate(); // Call it for both the edit and create modals
-
-        // Handle edit modal opening and populate values
-        const editModal = document.getElementById('editModal');
-        if (editModal) {
-            editModal.addEventListener('show.bs.modal', function (event) {
-                const row = event.relatedTarget; // Row that triggered the modal
-                const original_YT_Name = row.getAttribute('data-ytname');
-                const leds_colour = row.getAttribute('data-ledscolour');
-                const leds = row.getAttribute('data-leds');
-
-                // Debug logging for attributes
-                console.log('Row attributes:', { original_YT_Name, leds_colour, leds });
-
-                // Populate modal inputs
-                document.getElementById('original_YT_Name').value = original_YT_Name;
-                document.getElementById('YT_Name').value = original_YT_Name;
-                colorInputEdit.value = leds_colour;
-                colorHexInputEdit.value = leds_colour; // Sync the hex field with the color picker
-                document.getElementById('Leds').value = leds;
-
-                // Ensure the delete form and delete button are accessible
-                const delete_YT_Name = document.getElementById('delete_YT_Name');
-                if (delete_YT_Name) {
-                    delete_YT_Name.value = original_YT_Name;
-                } else {
-                    console.error('Delete input element not found!');
-                }
-
-                // Add delete confirmation
-                const deleteButton = document.getElementById('deleteButton');
-                if (deleteButton) {
-                    // Attach the delete confirmation event only when the modal is shown
-                    deleteButton.removeEventListener('click', deleteConfirmationHandler); // Ensure old listeners are removed
-                    deleteButton.addEventListener('click', deleteConfirmationHandler);
-                } else {
-                    console.error('Delete button not found!');
-                }
-            });
-        }
-
-        // Confirmation and deletion process
-        function deleteConfirmationHandler() {
-            const ytName = document.getElementById('delete_YT_Name').value;
-            const confirmationMessage = `Do you really want to delete ${ytName}?`;
-
-            if (confirm(confirmationMessage)) {
-                // Send the DELETE request to Flask
-                fetch('/delete', {
+            }
+            
+            // Plaque definitions.
+            const plaqueDefinitions = {
+                "1x1": {w: 1, h: 1},
+                "2x1": {w: 2, h: 1},
+                "3x1": {w: 3, h: 1},
+                "3x2": {w: 3, h: 2}
+            };
+            
+            // Remove old grid click listener that created plaques.
+            // <!-- ...existing grid click event removed... -->
+            
+            window.isLoading = false;
+            
+            // NEW: Auto-save using a POST fetch call.
+            function autoSavePlaques() {
+                fetch('/plaques', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ YT_Name: ytName }), // Send YT_Name in JSON format
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(plaques)
                 })
-                .then(response => {
-                    if (response.ok) {
-                        // Close the modal after successful deletion (without jQuery)
-                        const modal = new bootstrap.Modal(document.getElementById('editModal'));
-                        modal.hide(); // Close the modal
-                        location.reload(); // Reload the page to reflect the changes
-                    } else {
-                        alert('Failed to delete entry.');
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Saved to server:', data);
+                })
+                .catch(err => console.error(err));
+            }
+            
+            // NEW: Auto-load using a GET fetch call.
+            function autoLoadPlaques() {
+                window.isLoading = true;
+                fetch('/plaques')
+                .then(response => response.json())
+                .then(loaded => {
+                    if (loaded && Array.isArray(loaded)) {
+                        // Remove existing plaque elements.
+                        document.querySelectorAll('.plaque').forEach(p => p.remove());
+                        plaques.length = 0;
+                        plaqueIdCounter = 0;
+                        loaded.forEach(item => {
+                            // Use Leds_colour if available, else fallback to color.
+                            const plaqueColor = item.Leds_colour || item.color || "#AABBCC";
+                            createPlaque(
+                                item.plaqueType,
+                                item.name,
+                                item.YT_Name || item.username || '', // Handle legacy data
+                                item.twitchusername || '',
+                                plaqueColor
+                            );
+                            // Update the new record's pos and Leds.
+                            const rec = plaques[plaques.length - 1];
+                            rec.pos = item.pos;
+                            rec.Leds = item.Leds;
+                            const plaqueElem = document.querySelector(`.plaque[data-id="${rec.id}"]`);
+                            if (plaqueElem) {
+                                plaqueElem.style.left = rec.pos.left + 'px';
+                                plaqueElem.style.top = rec.pos.top + 'px';
+                            }
+                        });
+                        updatePlaqueList();
                     }
+                    window.isLoading = false;
                 })
-                .catch(error => {
-                    console.error('Error during deletion:', error);
+                .catch(err => {
+                    console.error(err);
+                    window.isLoading = false;
                 });
             }
-        }
-    });
-</script>
-
-<script>
-    // Function to trigger LEDs on the backend
-    function triggerLeds(ytName) {
-        fetch("/trigger_leds", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ YT_Name: ytName, time: 5 }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === "success") {
-                alert(`LEDs for ${ytName} have been triggered!`);
-            } else {
-                alert(`Failed to trigger LEDs: ${data.message || "Unknown error"}`);
+            
+            // Update plaque list UI using a color picker.
+            function updatePlaqueList() {
+                plaqueListContainer.innerHTML = '';
+                plaques.forEach(p => {
+                    const container = document.createElement('div');
+                    container.innerHTML = `
+                        <div class="field-group">
+                            <span>ID: ${p.id}</span>
+                        </div>
+                        <div class="field-group">
+                            <span>Size: ${p.plaqueType}</span>
+                        </div>
+                        <div class="field-group">
+                            <span>Name:</span>
+                            <input type="text" id="name-${p.id}" value="${p.name}" />
+                        </div>
+                        <div class="field-group">
+                            <span>YT:</span>
+                            <input type="text" id="YT_Name-${p.id}" value="${p.YT_Name || ''}" />
+                        </div>
+                        <div class="field-group">
+                            <span>Twitch:</span>
+                            <input type="text" id="twitchusername-${p.id}" value="${p.twitchusername || ''}" />
+                        </div>
+                        <div class="field-group">
+                            <span>Color:</span>
+                            <input type="color" id="Leds_colour-${p.id}" value="${p.Leds_colour}" />
+                        </div>
+                        <div class="button-group">
+                            <button id="save-${p.id}">Save</button>
+                            <button id="test-${p.id}" class="btn btn-info">Test</button>
+                            <button id="delete-${p.id}">Del</button>
+                        </div>
+                    `;
+                    plaqueListContainer.appendChild(container);
+                    document.getElementById(`save-${p.id}`).addEventListener('click', () => {
+                        p.name = document.getElementById(`name-${p.id}`).value;
+                        p.YT_Name = document.getElementById(`YT_Name-${p.id}`).value;
+                        p.twitchusername = document.getElementById(`twitchusername-${p.id}`).value;
+                        p.Leds_colour = document.getElementById(`Leds_colour-${p.id}`).value;
+                        // Update the corresponding plaque element.
+                        const plaqueElem = document.querySelector(`.plaque[data-id="${p.id}"]`);
+                        if (plaqueElem) {
+                            plaqueElem.childNodes[0].nodeValue = p.name;
+                            plaqueElem.style.background = p.Leds_colour;
+                        }
+                        updatePlaqueList();
+                    });
+                    document.getElementById(`delete-${p.id}`).addEventListener('click', () => {
+                        // Remove the plaque record.
+                        const idx = plaques.findIndex(item => item.id === p.id);
+                        if (idx !== -1) {
+                            plaques.splice(idx, 1);
+                        }
+                        // Remove the plaque element.
+                        const plaqueElem = document.querySelector(`.plaque[data-id="${p.id}"]`);
+                        if (plaqueElem) {
+                            plaqueElem.remove();
+                        }
+                        updatePlaqueList();
+                    });
+                    document.getElementById(`test-${p.id}`).addEventListener('click', () => {
+                        const ytName = document.getElementById(`YT_Name-${p.id}`).value;
+                        testPlaque(ytName);
+                    });
+                });
+                // Only auto-save if not currently loading data.
+                if (!window.isLoading) {
+                    autoSavePlaques();
+                }
             }
-        })
-        .catch(error => {
-            console.error("Error triggering LEDs:", error);
-            alert("An error occurred while triggering LEDs.");
-        });
-    }
-</script>
+            
+            // Create a plaque element.
+            function createPlaque(plaqueType, name, YT_Name, twitchusername, Leds_colour) {
+                const def = plaqueDefinitions[plaqueType];
+                const plaque = document.createElement('div');
+                plaque.className = 'plaque';
+                plaque.contentEditable = true;
+                plaque.innerText = name;
+                plaque.style.width = (def.w * cellSize - 4) + 'px';
+                plaque.style.height = (def.h * cellSize - 4) + 'px';
+                plaque.style.left = '0px';
+                plaque.style.top = '0px';
+                // Use the provided color.
+                plaque.style.background = Leds_colour;
+                
+                // Add edit button.
+                const editButton = document.createElement('button');
+                editButton.innerText = 'Edit';
+                editButton.className = 'edit-btn';
+                plaque.dataset.movable = "false";  
+                
+                editButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (plaque.dataset.movable === "false") {
+                        plaque.dataset.movable = "true";
+                        plaque.contentEditable = false;
+                        editButton.innerText = "Done Moving";
+                        plaque.style.cursor = "move";
+                        makeDraggable(plaque);
+                    } else {
+                        plaque.dataset.movable = "false";
+                        removeDraggable(plaque);
+                        plaque.style.cursor = "text";
+                        editButton.innerText = "Edit";
+                        plaque.contentEditable = true;
+                    }
+                });
+                plaque.appendChild(editButton);
+                
+                // Add plaque to the grid.
+                grid.appendChild(plaque);
+                
+                // Create plaque record.
+                const id = ++plaqueIdCounter;
+                plaque.dataset.id = id;
+                plaques.push({
+                    id,
+                    plaqueType,
+                    name,
+                    YT_Name,
+                    twitchusername,
+                    Leds_colour,
+                    pos: { left: 0, top: 0 },
+                    Leds: "" // Updated: no more cells
+                });
+                updatePlaqueList();
+            }
+            
+            // Modify makeDraggable to update plaque info on drag end.
+            function makeDraggable(plaque) {
+                let offsetX, offsetY;
+                function dragStart(e) {
+                    if (e.button !== 0) return;
+                    offsetX = e.clientX - plaque.offsetLeft;
+                    offsetY = e.clientY - plaque.offsetTop;
+                    document.addEventListener('mousemove', drag);
+                    document.addEventListener('mouseup', dragEnd);
+                }
+                function drag(e) {
+                    let newLeft = e.clientX - offsetX;
+                    let newTop = e.clientY - offsetY;
+                    newLeft = Math.max(0, Math.min(newLeft, grid.offsetWidth - plaque.offsetWidth));
+                    newTop = Math.max(0, Math.min(newTop, grid.offsetHeight - plaque.offsetHeight));
+                    newLeft = Math.round(newLeft / cellSize) * cellSize;
+                    newTop = Math.round(newTop / cellSize) * cellSize;
+                    plaque.style.left = newLeft + 'px';
+                    plaque.style.top = newTop + 'px';
+                }
+                function dragEnd() {
+                    document.removeEventListener('mousemove', drag);
+                    document.removeEventListener('mouseup', dragEnd);
+                    // After moving, update the corresponding plaque record.
+                    const id = parseInt(plaque.dataset.id, 10);
+                    const def = plaqueDefinitions[ plaques.find(p => p.id === id).plaqueType ];
+                    const left = parseInt(plaque.style.left, 10);
+                    const top = parseInt(plaque.style.top, 10);
+                    let ledIndices = [];
+                    const col = left / cellSize;
+                    const row = top / cellSize;
+                    for(let i = row; i < row + def.h; i++){
+                        for(let j = col; j < col + def.w; j++){
+                            ledIndices.push(i * cols + j);
+                        }
+                    }
+                    // Update plaque record: save the LED positions as a comma-separated string in "Leds"
+                    const plaqueRec = plaques.find(p => p.id === id);
+                    plaqueRec.pos = { left, top };
+                    plaqueRec.Leds = ledIndices.join(',');
+                    updatePlaqueList();
+                }
+                plaque.addEventListener('mousedown', dragStart);
+                plaque._dragStart = dragStart;
+            }
+            
+            function removeDraggable(plaque) {
+                if (plaque._dragStart) {
+                    plaque.removeEventListener('mousedown', plaque._dragStart);
+                    plaque._dragStart = null;
+                }
+            }
+            
+            // Add plaque palette buttons.
+            Object.keys(plaqueDefinitions).forEach(type => {
+                const btn = document.createElement('button');
+                btn.innerText = `Add ${type}`;
+                btn.addEventListener('click', () => {
+                    // Instead of using dialogue boxes, create a plaque with default values.
+                    createPlaque(type, "New plaque", "", "", "#AABBCC");
+                });
+                plaquePalette.appendChild(btn);
+            });
+            
+            // Add save and load functionality.
+            function savePlaques() {
+                // Serialize the plaques array.
+                const data = JSON.stringify(plaques);
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'plaques.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+            
+            function loadPlaques(data) {
+                // Remove existing plaque elements.
+                const existingPlaques = document.querySelectorAll('.plaque');
+                existingPlaques.forEach(p => p.remove());
+                plaques.length = 0;
+                plaqueIdCounter = 0;
+                
+                // Parse and create plaques.
+                const loaded = JSON.parse(data);
+                loaded.forEach(item => {
+                    // Create the plaque element.
+                    createPlaque(
+                        item.plaqueType,
+                        item.name,
+                        item.YT_Name || item.username || '', // Handle legacy data
+                        item.twitchusername || '',
+                        item.Leds_colour
+                    );
+                    // After creation, get the plaque record and update its pos and Leds info.
+                    const rec = plaques[plaques.length - 1];
+                    rec.pos = item.pos;
+                    rec.Leds = item.Leds;
+                    // Update the plaque element's style.
+                    const plaqueElem = document.querySelector(`.plaque[data-id="${rec.id}"]`);
+                    if (plaqueElem) {
+                        plaqueElem.style.left = rec.pos.left + 'px';
+                        plaqueElem.style.top = rec.pos.top + 'px';
+                    }
+                });
+                updatePlaqueList();
+            }
+            
+            // Remove or comment out listeners for missing Save/Load buttons.
+            // Old code:
+            // document.getElementById('saveBtn').addEventListener('click', savePlaques);
+            // document.getElementById('loadBtn').addEventListener('click', () => {
+            //     document.getElementById('fileInput').click();
+            // });
+            // document.getElementById('fileInput').addEventListener('change', function(e) {
+            //     const file = e.target.files[0];
+            //     if (!file) return;
+            //     const reader = new FileReader();
+            //     reader.onload = function(evt) {
+            //         loadPlaques(evt.target.result);
+            //     };
+            //     reader.readAsText(file);
+            // });
 
-<hr>
+            // Alternatively wrap in a conditional check:
+            if(document.getElementById('saveBtn')){
+                document.getElementById('saveBtn').addEventListener('click', savePlaques);
+            }
+            if(document.getElementById('loadBtn')){
+                document.getElementById('loadBtn').addEventListener('click', () => {
+                    document.getElementById('fileInput').click();
+                });
+            }
+            if(document.getElementById('fileInput')){
+                document.getElementById('fileInput').addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        loadPlaques(evt.target.result);
+                    };
+                    reader.readAsText(file);
+                });
+            }
 
+            // On page load, automatically load plaques from the server.
+            autoLoadPlaques();
+            
+            // ...existing code for grid layout expansion remains unchanged...
+        })();
+    </script>
+    <script>
+        // Remove grid expansion buttons.
+        // Previous code creating and wiring expandColsBtn and expandRowsBtn removed.
+        
+        // Wrap the grid in a container without expansion buttons.
+        const existingGrid = document.getElementById('grid');
+        const gridParent = existingGrid.parentNode;
+        const newContainer = document.createElement('div');
+        newContainer.style.display = 'flex';
+        newContainer.style.flexDirection = 'column';
+        newContainer.style.alignItems = 'center';
+        
+        // Append grid directly into the container.
+        newContainer.appendChild(existingGrid);
+        
+        // Insert the new container after the toolbar.
+        gridParent.insertBefore(newContainer, gridParent.querySelector('#toolbar').nextSibling);
+        
+        // Removed code that adjusted currentRows/currentCols and reRenderGridCells.
+
+        function testPlaque(ytName) {
+            fetch('/trigger_leds', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    YT_Name: ytName,
+                    time: 3  // 3 seconds test duration
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log('Test successful');
+                } else {
+                    console.error('Test failed:', data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
 </html>
