@@ -1,9 +1,14 @@
 import re
+import os
+import time
 from datetime import datetime, timedelta
-import homeassistant_controls
-import sound_board
+from homeassistant_controls import Bubbles, adjust_desk_height
+from sound_board import play_sound
+import json
 
 access_hierarchy = ["regular", "patron", "superchat"]
+COMMANDS_FILE = 'commands.json'
+DATA_FILE = "data.json"
 
 
 def check_access(user_status, command_level):
@@ -17,90 +22,102 @@ def check_access(user_status, command_level):
     )
     return user_level >= command_level_index
 
+# Load commands from JSON file
+def load_commands():
+    with open(COMMANDS_FILE, 'r') as file:
+        return json.load(file)
 
-def handle_desk_command(match, is_superchat, command_info, display_name):
-    print("Desk command received! From: " + display_name)
-    if match:
-        desk_height = int(match.group(1))
-        if 71 <= desk_height <= 120:
-            print(
-                f"Adjusting desk height to {desk_height} as requested by {display_name}."
-            )
-            # homeassistant_controls.adjust_desk_height(desk_height)
-            command_info["last_used"] = datetime.now()
-        else:
-            print(f"Desk height {desk_height} out of range. Command ignored.")
+# Function to get access levels
+def get_access_levels():
+    return {
+        "regular": 1,
+        "patreon": 2,
+        "superchat": 3,
+    }
 
+# Tracking command execution times
+last_executed = {}
 
-def handle_bubbles_command(match, is_superchat, command_info, display_name):
-    print("Bubbles command activated by " + display_name)
-    homeassistant_controls.Bubbles()
-    command_info["last_used"] = datetime.now()
+# Function to execute a command
+def execute_command(command, display_name, is_superchat=False):
+    commands = load_commands()
+    user_access_level = get_user_access_level(display_name, is_superchat)
 
+    command = command.strip().lower()
 
-def handle_sound_command(match, is_superchat, command_info, display_name):
-    if match:
-        sound_effect = match.group(1)
-        print(sound_effect)
-        print(f"Playing sound: {sound_effect} for {display_name}")
-        # Assuming a function `play_sound` that plays the sound effect
-        sound_board.play_sound(sound_effect)
-        command_info["last_used"] = datetime.now()
+    if command.startswith('!desk'):
+        base_command = '!desk'
+    else:
+        base_command = command.split()[0]  # Get the command without arguments
 
+    # Check if the base command exists in commands.json
+    if base_command in commands and commands[base_command]['enabled']:
+        command_details = commands[base_command]
 
-commands = {
-    "!desk_": {
-        "timeout": {
-            "regular": timedelta(minutes=10),
-            "patron": timedelta(minutes=3),
-            "superchat": timedelta(seconds=0),
-        },
-        "access_level": "regular",
-        "action": handle_desk_command,
-    },
-    "!bubbles": {
-        "timeout": {
-            "regular": timedelta(minutes=10),
-            "patron": timedelta(minutes=3),
-            "superchat": timedelta(seconds=0),
-        },
-        "access_level": "patron",
-        "action": handle_bubbles_command,
-    },
-    "!sound_": {
-        "timeout": {
-            "regular": timedelta(minutes=0),
-            "patron": timedelta(minutes=0),
-            "superchat": timedelta(seconds=0),
-        },
-        "access_level": "patron",
-        "action": handle_sound_command,
-    },
-}
+        # Access level check
+        required_access_level = command_details['access_level']
+        if get_access_levels()[user_access_level] < get_access_levels()[required_access_level]:
+            print(f"User {display_name} does not have the required access level ({user_access_level}) for command {command} (requires {required_access_level}).")
+            return
 
+        # Timeout check
+        current_time = time.time()
+        if base_command in last_executed:
+            time_elapsed = current_time - last_executed[base_command]
+            if time_elapsed < command_details['timeout']:
+                print(f"Command {command} is on timeout for {display_name}. Please wait {command_details['timeout'] - time_elapsed:.2f} seconds.")
+                return
 
-def execute_command(
-    command_key, message_text, is_superchat, display_name, check_name_in_data
-):
-    user_status = get_user_status(display_name, is_superchat, check_name_in_data)
-    cmd_info = commands.get(command_key)
-    if cmd_info:
-        command_level = cmd_info["access_level"]
-        if is_superchat or check_access(user_status, command_level):
-            # Adjust the regex pattern to match commands like !Sound_boo, !Sound_clap
-            match = re.search(rf"{command_key}(\w+)", message_text)
-            current_time = datetime.now()
-            last_used = cmd_info.get("last_used", datetime.min)
-            timeout = cmd_info["timeout"].get(user_status, timedelta(minutes=10))
-            if is_superchat or (current_time - last_used >= timeout):
-                cmd_info["action"](match, is_superchat, cmd_info, display_name)
-                cmd_info["last_used"] = current_time
+        # Execute the command
+        print(f"Executing command {command} from {display_name}")
+        perform_command_action(command)
+        last_executed[base_command] = current_time
+    else:
+        print(f"Command '{command}' is not enabled or does not exist.")
 
+# Function to perform the command action (like playing a sound or controlling devices)
+def perform_command_action(command):
+    if command.startswith("!sound_"):
+        sound_name = command.split("!sound_")[1]
+        sound_name = sound_name.lower()
+        print(f"Attempting to play sound: {sound_name}")
+        play_sound(sound_name)
+    elif command == "!bubbles":
+        Bubbles()
+    elif command.startswith("!desk"):
+        try:
+            # Remove the command part and extract the number
+            match = re.match(r'!desk[_\s]*(\d+)', command)
+            if match:
+                desired_height = int(match.group(1))
+            else:
+                print("No valid height specified for desk command.")
+                return
+            if 71 <= desired_height <= 120:
+                print(f"Adjusting desk to height: {desired_height} cm")
+                adjust_desk_height(desired_height)
+            else:
+                print(f"Desired height {desired_height} is out of range. Must be between 71 and 120 cm.")
+        except ValueError:
+            print(f"Invalid desk height specified in command: {command}")
+    else:
+        print(f"No action defined for command: {command}")
 
-def get_user_status(display_name, is_superchat, check_name_in_data):
+def load_data():
+    if not os.path.exists(DATA_FILE):
+        return []  # Return empty list if file does not exist
+    with open(DATA_FILE, "r") as file:
+        return json.load(file)
+
+# Function to get user access level
+def get_user_access_level(display_name, is_superchat=False):
     if is_superchat:
         return "superchat"
-    elif check_name_in_data(display_name):
-        return "patron"
+
+    # Check if the user is in the database and assign the appropriate access level
+    supporters = load_data()
+    
+    if display_name in supporters:
+        return "patreon"
     else:
         return "regular"

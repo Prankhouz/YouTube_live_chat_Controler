@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Commands Management</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- Button to trigger "Back to Home" -->
+        <a href="{{ url_for('index') }}" class="btn btn-outline-primary mb-3">
+            Home
+        </a>
+        <a href="{{ url_for('editor') }}" class="btn btn-outline-secondary mb-3">
+            PlaqueBoard
+        </a>
+        <a href="{{ url_for('manage_secrets') }}" class="btn btn-outline-secondary mb-3">
+            Secrets
+        </a>
+        <a href="{{ url_for('manage_commands') }}" class="btn btn-outline-secondary mb-3">
+            Commands
+        </a>
+       
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .command {
+            cursor: pointer;
+            padding: 10px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .command.disabled {
+            background-color: #ffdddd;
+            text-decoration: line-through;
+            color: #a00;
+        }
+        button {
+            padding: 5px 10px;
+            margin: 0 5px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script>
+        function toggleCommand(commandElement) {
+            commandElement.classList.toggle('disabled');
+            const checkbox = document.querySelector(`input[name='enabled_${commandElement.dataset.command}']`);
+            checkbox.checked = !checkbox.checked;
+            updateCommand(commandElement.dataset.command);
+        }
+
+        function updateCommand(command) {
+            const formData = new FormData();
+            formData.append('command_name', command);
+            formData.append('enabled', document.querySelector(`input[name='enabled_${command}']`).checked);
+            formData.append('timeout', document.querySelector(`input[name='timeout_${command}']`).value);
+            formData.append('access_level', document.querySelector(`select[name='access_level_${command}']`).value);
+
+            fetch('/update_command', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Command updated:', data);
+            })
+            .catch(error => {
+                console.error('Error updating command:', error);
+            });
+        }
+
+        document.addEventListener('input', function(event) {
+            if (event.target.matches('input[type="number"], select')) {
+                const command = event.target.name.replace(/^(timeout_|access_level_)/, '');
+                updateCommand(command);
+            }
+        });
+
+        document.addEventListener('change', function(event) {
+            if (event.target.matches('input[type="checkbox"]')) {
+                const command = event.target.name.replace(/^enabled_/, '');
+                updateCommand(command);
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1>Manage Commands</h1>
+    <form method="post">
+        <table>
+            <tr>
+                <th>Command</th>
+                <th>Timeout (seconds)</th>
+                <th>Access Level</th>
+                <th>Actions</th>
+            </tr>
+            {% for command, details in commands.items() %}
+            <tr>
+                <td class="command {% if not details['enabled'] %}disabled{% endif %}" data-command="{{ command }}" onclick="toggleCommand(this)">{{ command }}</td>
+                <td><input type="number" name="timeout_{{ command }}" value="{{ details['timeout'] }}" required></td>
+                <td>
+                    <select name="access_level_{{ command }}">
+                        {% for level, value in access_levels.items() %}
+                        <option value="{{ level }}" {% if details['access_level'] == level %}selected{% endif %}>{{ level.capitalize() }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <button type="submit" formaction="{{ url_for('test_commands') }}" formmethod="post" name="command_input" value="{{ command }}">Test</button>
+                </td>
+                <td style="display: none;"><input type="checkbox" name="enabled_{{ command }}" {% if details['enabled'] %}checked{% endif %}></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </form>
+</body>
+</html>

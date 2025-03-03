@@ -1,13 +1,21 @@
 import requests
 import time
-import pyttsx3
-import secrets
+import json
+import os
 
+SECRETS_FILE = 'secrets.json'
 
+# Function to load data from JSON
+def load_secrets():
+    if not os.path.exists(SECRETS_FILE):
+        return []  # Return empty list if file does not exist
+    with open(SECRETS_FILE, "r") as file:
+        return json.load(file)
+        
 def set_leds(led_indices, color, timehere):
-
+    secrets = load_secrets()
     led_indices_new = list(map(int, led_indices.split(",")))
-    api_endpoint = f"" + str(secrets.BOARD_IP) + "/json/state"
+    api_endpoint = f"" + str(secrets['board_ip']) + "/json/state"
     payload = {"seg": {"id": 0, "i": []}}
 
     # Construct the payload to set the color of each LED
