@@ -2,6 +2,7 @@ import json
 from flask import Flask, request, render_template, redirect, url_for, jsonify
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from twitchio.ext import commands
 import time
 import sys
 import os
@@ -28,9 +29,42 @@ def check_name_in_data(display_name):
         return None
     data = load_json_data()
     for person in data:
-        if person["YT_Name"] == display_name:
+        if person["YT_Name"] == display_name or person.get("twitchusername") == display_name:
             return person
     return None
+
+def handle_message(display_name, message_text, is_superchat=False):
+
+    person_info = check_name_in_data(display_name)
+    if person_info:
+        threading.Thread(
+            target=plaque_board_controller.set_leds,
+            args=(person_info["Leds"], person_info["Leds_colour"], 10),
+        ).start()
+    iscommand = False
+    commands = app.load_commands()
+    for base_command in commands.keys():
+        if base_command in message_text.lower():
+            iscommand = True
+            commandhandler.execute_command(
+                message_text.lower(), display_name, is_superchat
+            )
+            break
+    if iscommand == False:
+            ttstext = f"{display_name} said: {message_text}"
+            gotts(ttstext)
+
+class TwitchBot(commands.Bot):
+    def __init__(self, token, channel):
+        super().__init__(token=token, prefix="!", initial_channels=[channel])
+
+    async def event_ready(self):
+        print(f"Logged in as {self.nick}")
+
+    async def event_message(self, message):
+        if message.author is None or message.author.name == self.nick:
+            return
+        handle_message(message.author.name, message.content)
 
 
 # Function to get live chat messages from YouTube and execute commands
@@ -53,26 +87,7 @@ def print_live_chat_messages(live_chat_id):
                     message_text = item['snippet']['displayMessage']
                     display_name = item['authorDetails']['displayName']
                     is_superchat = item['snippet'].get('superChatDetails') is not None
-                    print("User " + display_name + " just said: " + message_text)
-                    
-                    if is_superchat:
-                        # Handle bubbles command for superchat
-                        commandhandler.execute_command("!bubbles", display_name, is_superchat=True)
-
-                    # Trigger LEDs for the user if they have a plaque
-                    threading.Thread(target=plaque_board_controller.set_leds_for_user, args=(display_name,)).start()
-
-                    # Handle commands
-                    commands = app.load_commands()
-                    for base_command in commands.keys():
-                        if base_command in message_text.lower():
-                            commandhandler.execute_command(message_text.lower(), display_name, is_superchat)
-                            notacommand = False
-                            break
-                            
-                    if notacommand:
-                        ttstext = (display_name + " said: " + message_text)
-                        gotts(ttstext)  # Queue the TTS
+                    handle_message(display_name, message_text, is_superchat)
             time.sleep(5)
             first_request = False
             request = youtube.liveChatMessages().list_next(request, response)
@@ -143,6 +158,10 @@ def get_live_chat_id(video_id, secrets):
     
     return None
 
+def start_twitch_app():
+    bot.run()
+    pass
+
 if __name__ == '__main__':
     if not os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
         secrets = load_secrets()
@@ -155,8 +174,8 @@ if __name__ == '__main__':
             video_id = input("Please enter a video ID manually: ").strip()
 
         if not video_id:
-            print("No valid video ID provided. Exiting program.")
-            sys.exit(1)
+            print("No valid video ID provided.")
+            
 
         live_chat_id = get_live_chat_id(video_id, secrets)
 
@@ -164,9 +183,11 @@ if __name__ == '__main__':
             print(f"Found live chat for video {video_id}. Printing messages...")
             threading.Thread(target=print_live_chat_messages, args=(live_chat_id,), daemon=True).start()
         else:
-            print("Live chat not found for this video. Exiting program.")
-            sys.exit(1)
+            print("Live chat not found for this video. Disable Youtube Chat.")
 
+        # Start Twitch bot
+        bot = TwitchBot(secrets["TWITCH_OAUTH_TOKEN"], secrets["TWITCH_CHANNEL"])
+        threading.Thread(target=start_twitch_app, args=(), daemon=True).start()
     # Run the Flask app
     # app = Flask(__name__)
     # app.secret_key = 'supersecretkey'

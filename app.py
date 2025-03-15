@@ -71,6 +71,8 @@ def index():
 def manage_secrets():
     secrets = load_secrets()
     if request.method == 'POST':
+        secrets['TWITCH_OAUTH_TOKEN'] = request.form['TWITCH_OAUTH_TOKEN']
+        secrets['TWITCH_CHANNEL'] = request.form['TWITCH_CHANNEL']
         secrets['api_key'] = request.form['api_key']
         secrets['api_key_backup'] = request.form['api_key_backup']
         secrets['channel_id'] = request.form['channel_id']
