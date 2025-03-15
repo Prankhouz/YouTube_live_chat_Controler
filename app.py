@@ -3,6 +3,7 @@ import json
 import os
 from plaque_board_controller import set_leds
 import commandhandler
+import tts_module
 
 app = Flask(__name__)
 
@@ -136,6 +137,13 @@ def update_command():
         return jsonify({'message': f'Command {command_name} updated successfully.'}), 200
     else:
         return jsonify({'error': f'Command {command_name} not found.'}), 404
+
+@app.route('/skip_tts', methods=['POST'])
+def skip_tts():
+    tts_module.skip_current_tts()  # Clear current audio and move to the next one
+    return jsonify({"status": "success", "message": "Current TTS skipped!"})
+
+
 
 @app.route("/editor", methods=["GET", "POST"])
 def editor():

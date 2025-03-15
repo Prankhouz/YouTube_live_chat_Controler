@@ -8,28 +8,30 @@ import atexit
 
 # Initialize the TTS queue
 tts_queue = queue.Queue()
+stop_event = threading.Event()
+
 
 def _tts_worker():
     """Worker thread to process TTS requests from the queue."""
     while True:
         text = tts_queue.get()  # Get the next text from the queue
         if text is None:  # Stop signal
-            print("Stopping TTS worker thread.")
             break
 
         try:
+            if stop_event.is_set():
+                continue
+            
             print(f"Processing text: {text}")
-            totts(text)
+            _play_tts(text)
         except Exception as e:
             print(f"Error during TTS playback: {e}")
         finally:
-            tts_queue.task_done()  # Mark task as complete
-            print("TTS task done.")
+            tts_queue.task_done()
 
 
 def gotts(text):
     """Add a TTS request to the queue."""
-    print(f"Queueing text: {text}")
     tts_queue.put(text)
 
 
@@ -40,6 +42,64 @@ def stop_tts_worker():
     print("TTS worker stopped gracefully.")
 
 
+def _play_tts(text_to_say, session="default"):
+    """Convert text to speech and play it without blocking."""
+    if stop_event.is_set():
+        return
+
+    wav_path = f"./audio/{session}.wav"
+
+    try:
+        os.makedirs("./audio", exist_ok=True)
+
+        # Run the speech synthesis command
+        command = f'say.exe -w "{wav_path}" "{text_to_say}"'
+        os.system(command)
+
+        pygame.mixer.init()
+        pygame.mixer.music.load(wav_path)
+        pygame.mixer.music.play()
+
+        _wait_for_audio()
+
+    except Exception as e:
+        traceback.print_exc()
+
+
+
+def _wait_for_audio():
+    """Wait for audio to finish playing and release the file."""
+    while pygame.mixer.music.get_busy():
+        if stop_event.is_set():
+            pygame.mixer.music.stop()
+            break
+        time.sleep(0.1)
+
+    pygame.mixer.quit()
+
+def skip_current_tts():
+    """Stop the current audio without clearing the entire queue."""
+    stop_event.set()  # Signal to stop current audio
+    if pygame.mixer.get_init() and pygame.mixer.music.get_busy():
+        pygame.mixer.music.stop()  # Stop current audio if active
+    stop_event.clear()  # Allow the next audio to play
+
+
+def clear_queue():
+    """Stop current audio and clear the remaining TTS queue."""
+    stop_event.set()  # Signal to stop current audio
+    if pygame.mixer.get_init():
+        pygame.mixer.music.stop()  # Stop current audio if active
+
+    # Clear the queue while keeping the worker thread alive
+    with tts_queue.mutex:
+        tts_queue.queue.clear()
+    
+    stop_event.clear()  # Allow the next audio to play
+
+
+
+
 # Start the TTS worker thread
 _worker_thread = threading.Thread(target=_tts_worker, daemon=True)
 _worker_thread.start()
@@ -48,54 +108,16 @@ _worker_thread.start()
 atexit.register(stop_tts_worker)
 
 
-def totts(text_to_say, session="default"):
-    """
-    Convert text to speech, save as WAV and MP3, and play the WAV file using pygame.
-    
-    Args:
-        text_to_say (str): The text to convert to speech.
-        session (str): Session identifier for file naming.
-    """
-    wav_path = f"./audio/{session}.wav"
-
-
-    try:
-        # Ensure the audio directory exists
-        os.makedirs("./audio", exist_ok=True)
-
-        # Remove existing WAV file if it exists
-        if os.path.exists(wav_path):
-            os.remove(wav_path)
-        # Run the speech synthesis command
-        command = f'say.exe -w "{wav_path}" "{text_to_say}"'
-        os.system(command)
-        
-        pygame.init()
-        # Play the WAV file using pygame
-        pygame.mixer.init()
-        pygame.mixer.music.load(wav_path)
-        pygame.mixer.music.play()
-
-        # Wait for the audio to finish playing
-        while pygame.mixer.music.get_busy():
-            time.sleep(0.1)
-
-        # Cleanup
-        pygame.mixer.quit()
-
-    except Exception:
-        traceback.print_exc()
-
 
 if __name__ == "__main__":
-    import time
-
-    # Add test messages
     gotts("Pyro. Said. This is the first test message.")
     time.sleep(1)
     gotts("This is the second test message.")
     time.sleep(1)
     gotts("This is the third test message.")
+    
+    # Clear the queue or stop TTS at any point
+    # clear_queue()
 
     # Keep the script running to process the queue
     while not tts_queue.empty():

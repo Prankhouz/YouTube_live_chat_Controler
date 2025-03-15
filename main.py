@@ -34,13 +34,13 @@ def check_name_in_data(display_name):
     return None
 
 def handle_message(display_name, message_text, is_superchat=False):
-
     person_info = check_name_in_data(display_name)
     if person_info:
         threading.Thread(
             target=plaque_board_controller.set_leds,
             args=(person_info["Leds"], person_info["Leds_colour"], 10),
         ).start()
+
     iscommand = False
     commands = app.load_commands()
     for base_command in commands.keys():
@@ -50,9 +50,11 @@ def handle_message(display_name, message_text, is_superchat=False):
                 message_text.lower(), display_name, is_superchat
             )
             break
-    if iscommand == False:
-            ttstext = f"{display_name} said: {message_text}"
-            gotts(ttstext)
+
+    if not iscommand:
+        ttstext = f"{display_name} said: {message_text}"
+        threading.Thread(target=gotts, args=(ttstext,), daemon=True).start()
+
 
 class TwitchBot(commands.Bot):
     def __init__(self, token, channel):
