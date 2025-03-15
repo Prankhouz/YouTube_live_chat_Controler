@@ -53,7 +53,7 @@ def _play_tts(text_to_say, session="default"):
         os.makedirs("./audio", exist_ok=True)
 
         # Run the speech synthesis command
-        command = f'say.exe -w "{wav_path}" "{text_to_say}"'
+        command = f'say.exe -w "{wav_path}" "[:PHONE ON]{text_to_say}"'
         os.system(command)
 
         pygame.mixer.init()
@@ -112,7 +112,7 @@ atexit.register(stop_tts_worker)
 if __name__ == "__main__":
     gotts("Pyro. Said. This is the first test message.")
     time.sleep(1)
-    gotts("This is the second test message.")
+    gotts("[:PHONE ON][mah<200,31>][rih<200,34>][teh<200,31>][pow<400,29>][ney<600,34>]")
     time.sleep(1)
     gotts("This is the third test message.")
     
