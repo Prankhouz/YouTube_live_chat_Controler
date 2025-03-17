@@ -100,6 +100,11 @@ def skip_current_tts():
     stop_event.set()  # Signal to stop current audio
     if pygame.mixer.get_init() and pygame.mixer.music.get_busy():
         pygame.mixer.music.stop()  # Stop current audio if active
+    try:
+        engine = create_engine()
+        engine.stop()
+    except:
+        print("Error stopping Engine (this could be fine)")
     stop_event.clear()  # Allow the next audio to play
 
 
@@ -108,7 +113,7 @@ def clear_queue():
     stop_event.set()  # Signal to stop current audio
     if pygame.mixer.get_init():
         pygame.mixer.music.stop()  # Stop current audio if active
-
+    
     # Clear the queue while keeping the worker thread alive
     with tts_queue.mutex:
         tts_queue.queue.clear()
