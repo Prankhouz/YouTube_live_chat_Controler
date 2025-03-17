@@ -37,10 +37,12 @@ def set_leds(led_indices, color, timehere):
     payload = {"seg": {"id": 0, "i": []}}
 
     # Convert the color tuple (r, g, b) to a hex string without the '#' prefix.
-    hex_color = '{:02x}{:02x}{:02x}'.format(*color)
+    color = color.lstrip('#')
+    #print(f"Color received: {color} - Type: {type(color)}")
+    #hex_color = '{:02x}{:02x}{:02x}'.format(*color)
     # Construct the payload to set the color of each LED.
     for index in led_indices_new:
-        payload["seg"]["i"].extend([index, hex_color])
+        payload["seg"]["i"].extend([index, color])
 
     response = send_request_with_retry(api_endpoint, payload)
     if response is None:
