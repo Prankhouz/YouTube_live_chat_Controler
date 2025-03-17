@@ -4,12 +4,18 @@ import pygame
 import time
 import threading
 import queue
+import pyttsx3
 import atexit
 
 # Initialize the TTS queue
 tts_queue = queue.Queue()
 stop_event = threading.Event()
 
+def create_engine():
+    """Create a new pyttsx3 engine instance."""
+    engine = pyttsx3.init()
+    engine.setProperty("voice", 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_EN-US_DAVID_11.0')
+    return engine
 
 def _tts_worker():
     """Worker thread to process TTS requests from the queue."""
@@ -23,7 +29,8 @@ def _tts_worker():
                 continue
             
             print(f"Processing text: {text}")
-            _play_tts(text)
+            _play_newtts(text)
+            #_play_oldtts(text) #Old DEC Style TTS
         except Exception as e:
             print(f"Error during TTS playback: {e}")
         finally:
@@ -42,7 +49,7 @@ def stop_tts_worker():
     print("TTS worker stopped gracefully.")
 
 
-def _play_tts(text_to_say, session="default"):
+def _play_oldtts(text_to_say, session="default"):
     """Convert text to speech and play it without blocking."""
     if stop_event.is_set():
         return
@@ -65,7 +72,18 @@ def _play_tts(text_to_say, session="default"):
     except Exception as e:
         traceback.print_exc()
 
+def _play_newtts(text_to_say, session="default"):
+    """Convert text to speech and play it without blocking."""
+    if stop_event.is_set():
+        return
 
+    try:
+        engine = create_engine()
+        engine.say(text_to_say)
+        engine.runAndWait()  # Speak the text
+
+    except Exception as e:
+        traceback.print_exc()
 
 def _wait_for_audio():
     """Wait for audio to finish playing and release the file."""

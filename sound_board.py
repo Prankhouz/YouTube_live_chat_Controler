@@ -3,11 +3,7 @@ import os
 
 #os.environ["SDL_AUDIODRIVER"] = "dummy" (Only needed when running in VS Code Server (in VS Studio this needs to be commented))
 
-# Initialize Pygame
-pygame.init()
 
-# Initialize the mixer, you may need to tweak the buffer size for optimal performance
-pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=4096)
 
 # Dictionary to map sound names to their respective files
 sounds = {
@@ -27,6 +23,11 @@ sounds = {
 
 
 def play_sound(sound_name):
+    # Initialize Pygame
+    pygame.init()
+
+    # Initialize the mixer, you may need to tweak the buffer size for optimal performance
+    pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=4096)
     try:
         # Retrieve the file path from the dictionary using the sound name
         sound_file = sounds[sound_name]
