@@ -4,7 +4,6 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from twitchio.ext import commands
 import time
-import sys
 import os
 import threading
 import commandhandler

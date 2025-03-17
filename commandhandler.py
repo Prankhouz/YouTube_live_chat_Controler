@@ -109,15 +109,23 @@ def load_data():
     with open(DATA_FILE, "r") as file:
         return json.load(file)
 
+def load_supporters():
+    # Assuming supporters data is stored in plaques.json.
+    # If you have another file for patreon users, update the path accordingly.
+    with open("plaques.json", "r") as file:
+        return json.load(file)
+
 # Function to get user access level
 def get_user_access_level(display_name, is_superchat=False):
-    if is_superchat:
+    if is_superchat:  # Bypass for superchat if desired
         return "superchat"
 
-    # Check if the user is in the database and assign the appropriate access level
-    supporters = load_data()
-    
-    if display_name in supporters:
-        return "patreon"
-    else:
-        return "regular"
+    display_name_lower = display_name.lower()
+    supporters = load_supporters()
+    for supporter in supporters:
+        # Check against both keys. If a second username was added, include it.
+        yt_name = supporter.get("YT_Name", "").lower()
+        twitchusername = supporter.get("twitchusername", "").lower()
+        if display_name_lower in (yt_name, twitchusername):
+            return "patreon"
+    return "regular"
