@@ -49,7 +49,12 @@ def handle_message(display_name, message_text, is_superchat=False):
                 message_text.lower(), display_name, is_superchat
             )
             break
-
+    if message_text.lower().startswith("!dec"):
+        dec_text = message_text[5:].strip()
+        if dec_text:
+            threading.Thread(target=gotts, args=(dec_text,False,), daemon=True).start()
+        return
+    
     if not iscommand:
         ttstext = f"{display_name} said: {message_text}"
         threading.Thread(target=gotts, args=(ttstext,), daemon=True).start()

@@ -20,26 +20,31 @@ def create_engine():
 def _tts_worker():
     """Worker thread to process TTS requests from the queue."""
     while True:
-        text = tts_queue.get()  # Get the next text from the queue
-        if text is None:  # Stop signal
+        item = tts_queue.get()  # Get the next item from the queue
+        if item is None:  # Stop signal
             break
 
+        text, newtts = item  # Unpack the text and newtts flag
         try:
             if stop_event.is_set():
                 continue
+
+            print(f"Processing text: {text}, newtts={newtts}")
             
-            print(f"Processing text: {text}")
-            _play_newtts(text)
-            #_play_oldtts(text) #Old DEC Style TTS
+            if newtts:
+                _play_newtts(text)
+            else:
+                _play_oldtts(text)
+
         except Exception as e:
             print(f"Error during TTS playback: {e}")
         finally:
             tts_queue.task_done()
 
 
-def gotts(text):
-    """Add a TTS request to the queue."""
-    tts_queue.put(text)
+def gotts(text, newtts=True):
+    """Add a TTS request to the queue with a 'newtts' flag."""
+    tts_queue.put((text, newtts))  # Queue the text with the newtts attribute
 
 
 def stop_tts_worker():
