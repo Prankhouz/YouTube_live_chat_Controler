@@ -37,12 +37,10 @@ def set_leds(led_indices, color, timehere):
     payload = {"seg": {"id": 0, "i": []}}
 
     # Convert the color tuple (r, g, b) to a hex string without the '#' prefix.
-    color = color.lstrip('#')
-    #print(f"Color received: {color} - Type: {type(color)}")
-    #hex_color = '{:02x}{:02x}{:02x}'.format(*color)
+    hex_color = '{:02x}{:02x}{:02x}'.format(*color)
     # Construct the payload to set the color of each LED.
     for index in led_indices_new:
-        payload["seg"]["i"].extend([index, color])
+        payload["seg"]["i"].extend([index, hex_color])
 
     response = send_request_with_retry(api_endpoint, payload)
     if response is None:
@@ -56,7 +54,7 @@ def set_leds(led_indices, color, timehere):
     return response is not None
 
 
-def set_leds_for_user(display_name, duration=3):
+def set_leds_for_user(display_name, duration=5):
     """Trigger LEDs for a user based on their display name"""
     try:
         # Load plaques from file

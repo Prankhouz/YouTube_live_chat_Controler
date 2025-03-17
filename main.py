@@ -36,8 +36,8 @@ def handle_message(display_name, message_text, is_superchat=False):
     person_info = check_name_in_data(display_name)
     if person_info:
         threading.Thread(
-            target=plaque_board_controller.set_leds,
-            args=(person_info["Leds"], person_info["Leds_colour"], 10),
+            target=plaque_board_controller.set_leds_for_user,
+            args=(person_info['name'], 5),  # Duration is set to 10 as in the original code
         ).start()
 
     iscommand = False
