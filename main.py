@@ -160,6 +160,22 @@ def get_live_chat_id(video_id, secrets):
     
     return None
 
+def input_with_timeout(prompt, timeout=10):
+    result = [None]
+
+    def get_input():
+        result[0] = input(prompt).strip()
+
+    input_thread = threading.Thread(target=get_input)
+    input_thread.daemon = True
+    input_thread.start()
+    input_thread.join(timeout)
+    
+    if input_thread.is_alive():
+        print("\nTimeout reached. Continuing...")
+        return None
+    return result[0]
+
 def start_twitch_app():
     bot.run()
     pass
@@ -173,7 +189,7 @@ if __name__ == '__main__':
 
         if not video_id:
             print("No active live stream found.")
-            video_id = input("Please enter a video ID manually: ").strip()
+            video_id = input_with_timeout("Please enter a video ID manually: ", timeout=10)
 
         if not video_id:
             print("No valid video ID provided.")
