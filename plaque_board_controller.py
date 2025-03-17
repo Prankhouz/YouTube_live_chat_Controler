@@ -20,7 +20,7 @@ def send_request_with_retry(api_endpoint, payload, max_retries=3, delay=1):
             response.raise_for_status()
             return response
         except requests.exceptions.RequestException as e:
-            if response.status_code == 503:
+            if 'response' in locals() and response is not None and response.status_code == 503:
                 print(f"503 error, retrying... ({attempt + 1}/{max_retries})")
                 time.sleep(delay)
             else:
@@ -28,6 +28,7 @@ def send_request_with_retry(api_endpoint, payload, max_retries=3, delay=1):
                 return None
     print("Max retries reached. Giving up.")
     return None
+
 
 
 def set_leds(led_indices, color, timehere):
@@ -79,7 +80,7 @@ def set_leds_for_user(display_name, duration=5):
 
             # Get LED indices
             leds = matching_plaque.get('Leds', '')
-            print(f"Triggering LEDs for {display_name} - Color: #{color}, Leds: {leds}")
+            #print(f"Triggering LEDs for {display_name} - Color: #{color}, Leds: {leds}")
 
             # Trigger the LEDs
             return set_leds(leds, (r, g, b), duration)
