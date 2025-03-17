@@ -55,6 +55,7 @@ def handle_message(display_name, message_text, is_superchat=False):
         threading.Thread(target=gotts, args=(ttstext,), daemon=True).start()
 
 
+
 class TwitchBot(commands.Bot):
     def __init__(self, token, channel):
         super().__init__(token=token, prefix="!", initial_channels=[channel])
@@ -143,15 +144,15 @@ def get_live_chat_id(video_id, secrets):
             )
 
             if live_chat_id:
-                print(f"Successfully retrieved live chat ID using API key: {api_key}")
+                #print(f"Successfully retrieved live chat ID using API key: {api_key}")
                 return live_chat_id
 
         except HttpError as e:
             last_exception = e
-            print(f"API key {api_key} failed with error: {e}")
+            #print(f"API key {api_key} failed with error: {e}")
         except Exception as e:
             last_exception = e
-            print(f"Unexpected error with API key {api_key}: {e}")
+            #print(f"Unexpected error with API key {api_key}: {e}")
 
     # If all API keys fail
     if last_exception:
