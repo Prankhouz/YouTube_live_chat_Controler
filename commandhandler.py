@@ -84,7 +84,7 @@ def perform_command_action(command, displayname):
         play_sound(sound_name)
     elif command == "!bubbles":
         Bubbles()
-    elif command == "!blow":
+    elif command == "!celebrate":
         if displayname == 'pyrohouz':
             Birthday()
     elif command.startswith("!desk"):
