@@ -36,6 +36,11 @@ def Bubbles():
     print("Turning on the bubble machine...")
     call_ha_service('switch/turn_on', {"entity_id": entity_id})
 
+def Birthday():
+    entity_id = 'switch.blow_machine_blow_machine_10s'
+    print("Turning on the blow machine...")
+    call_ha_service('switch/turn_on', {"entity_id": entity_id})
+
 def adjust_desk_height(desired_height):
     STOP_ENTITY_ID = "cover.desk_desk"
     SET_HEIGHT_ENTITY_ID = "number.desk_desk_height"

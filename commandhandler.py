@@ -2,7 +2,7 @@ import re
 import os
 import time
 from datetime import datetime, timedelta
-from homeassistant_controls import Bubbles, adjust_desk_height
+from homeassistant_controls import Bubbles, Birthday, adjust_desk_height
 from sound_board import play_sound
 import json
 
@@ -86,7 +86,7 @@ def perform_command_action(command, displayname):
         Bubbles()
     elif command == "!blow":
         if displayname == 'pyrohouz':
-            Bubbles()
+            Birthday()
     elif command.startswith("!desk"):
         try:
             # Remove the command part and extract the number
