@@ -37,12 +37,12 @@ def Bubbles():
     call_ha_service('switch/turn_on', {"entity_id": entity_id})
 
 def Birthdaypopper():
-    entity_id = 'switch.celebrate_machine_celebrate_machine'
+    entity_id = 'switch.happpy_bday_celebrate'
     print("Turning on the celebrate machine...")
     call_ha_service('switch/turn_on', {"entity_id": entity_id})
 
 def Birthdaycandle():
-    entity_id = 'switch.blow_machine_blow_machine'
+    entity_id = 'switch.happpy_bday_blow'
     print("Turning on the blow machine...")
     call_ha_service('switch/turn_on', {"entity_id": entity_id})
 
