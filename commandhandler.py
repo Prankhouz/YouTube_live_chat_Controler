@@ -84,12 +84,12 @@ def perform_command_action(command, displayname):
         play_sound(sound_name)
     elif command == "!bubbles":
         Bubbles()
-    elif command == "!celebrate":
-        if displayname == 'pyrohouz':
-            Birthdaypopper()
-    elif command == "!blow":
-        if displayname == 'pyrohouz':
-            Birthdaycandle()
+    #elif command == "!celebrate":
+    #    if displayname == 'pyrohouz':
+    #        Birthdaypopper()
+    #elif command == "!blow":
+    #    if displayname == 'pyrohouz':
+    #        Birthdaycandle()
     elif command.startswith("!desk"):
         try:
             # Remove the command part and extract the number

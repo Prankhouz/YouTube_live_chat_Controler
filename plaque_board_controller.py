@@ -66,11 +66,12 @@ def set_leds_for_user(display_name, duration=5):
             return False
 
         # Find matching plaque
-        matching_plaque = None
-        for plaque in plaques:
-            if plaque.get('YT_Name', '').lower() == display_name.lower():
-                matching_plaque = plaque
-                break
+        matching_plaque = next(
+            (plaque for plaque in plaques if 
+                plaque.get('YT_Name', '').lower() == display_name.lower() or 
+                plaque.get('twitchusername', '').lower() == display_name.lower()), 
+            None
+        )
 
         if matching_plaque:
             # Get color and convert from hex
