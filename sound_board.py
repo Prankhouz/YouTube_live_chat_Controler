@@ -20,6 +20,7 @@ sounds = {
     "taskcomplete": "sounds/taskcomplete.mp3",
     "broken": "sounds/brokiewokie.mp3",
     "pigeon": "sounds/pigeon.mp3",
+    "sadpyro": "sounds/sadpyro.mp3",
     # Add more sounds here
 }
 
