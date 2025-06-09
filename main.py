@@ -104,7 +104,7 @@ def refresh_twitch_oauth_token(secrets):
         data = resp.json()
         new_access  = data["access_token"]
         new_refresh = data.get("refresh_token")
-        print("✅ Twitch token refreshed successfully.")
+        print("Twitch token refreshed successfully.")
         # update and persist
         secrets["TWITCH_OAUTH_TOKEN"]   = new_access
         if new_refresh:
@@ -112,7 +112,7 @@ def refresh_twitch_oauth_token(secrets):
         save_secrets(secrets)
         return new_access
     else:
-        print(f"❌ Failed to refresh Twitch token: {resp.status_code} {resp.text}")
+        print(f"Failed to refresh Twitch token: {resp.status_code} {resp.text}")
         return secrets.get("TWITCH_OAUTH_TOKEN")
 
 # Function to get live chat messages from YouTube and execute commands
@@ -232,7 +232,6 @@ if __name__ == '__main__':
         
         refreshed_token = refresh_twitch_oauth_token(secrets)
         secrets["TWITCH_OAUTH_TOKEN"] = refreshed_token
-        print(refreshed_token)
 
         # Try to get an active live video ID automatically
         video_id = get_live_video_id(secrets['api_key'], secrets['channel_id'])
