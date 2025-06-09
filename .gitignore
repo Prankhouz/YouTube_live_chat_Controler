@@ -7,3 +7,4 @@ secrets.json
 commands.json
 plaques.json
 audio/default.wav
+tokentest.py

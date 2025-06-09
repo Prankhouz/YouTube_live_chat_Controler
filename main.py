@@ -1,4 +1,5 @@
 import json
+import requests
 from flask import Flask, request, render_template, redirect, url_for, jsonify
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -11,6 +12,9 @@ import plaque_board_controller
 from tts_module import gotts
 import app
 
+def save_secrets(secrets):
+    with open("secrets.json", 'w') as file:
+        json.dump(secrets, file, indent=4)
 
 def load_secrets():
     with open("secrets.json", 'r') as file:
@@ -74,6 +78,42 @@ class TwitchBot(commands.Bot):
             return
         handle_message(message.author.name, message.content)
 
+
+def refresh_twitch_oauth_token(secrets):
+    """
+    Uses the stored refresh token to get a fresh access token,
+    then writes both access_token and new refresh_token back to secrets.json.
+    """
+    client_id     = secrets.get("TWITCH_CLIENT_ID")
+    client_secret = secrets.get("TWITCH_CLIENT_SECRET")
+    refresh_token = secrets.get("TWITCH_REFRESH_TOKEN")
+    if not (client_id and client_secret and refresh_token):
+        print("Twitch OAuth refresh credentials missing, skipping refresh.")
+        return secrets.get("TWITCH_OAUTH_TOKEN")
+
+    url = "https://id.twitch.tv/oauth2/token"
+    params = {
+        "grant_type":    "refresh_token",
+        "refresh_token": refresh_token,
+        "client_id":     client_id,
+        "client_secret": client_secret
+    }
+
+    resp = requests.post(url, params=params)
+    if resp.status_code == 200:
+        data = resp.json()
+        new_access  = data["access_token"]
+        new_refresh = data.get("refresh_token")
+        print("✅ Twitch token refreshed successfully.")
+        # update and persist
+        secrets["TWITCH_OAUTH_TOKEN"]   = new_access
+        if new_refresh:
+            secrets["TWITCH_REFRESH_TOKEN"] = new_refresh
+        save_secrets(secrets)
+        return new_access
+    else:
+        print(f"❌ Failed to refresh Twitch token: {resp.status_code} {resp.text}")
+        return secrets.get("TWITCH_OAUTH_TOKEN")
 
 # Function to get live chat messages from YouTube and execute commands
 def print_live_chat_messages(live_chat_id):
@@ -190,6 +230,10 @@ if __name__ == '__main__':
     if not os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
         secrets = load_secrets()
         
+        refreshed_token = refresh_twitch_oauth_token(secrets)
+        secrets["TWITCH_OAUTH_TOKEN"] = refreshed_token
+        print(refreshed_token)
+
         # Try to get an active live video ID automatically
         video_id = get_live_video_id(secrets['api_key'], secrets['channel_id'])
 
@@ -210,7 +254,7 @@ if __name__ == '__main__':
             print("Live chat not found for this video. Disable Youtube Chat.")
 
         # Start Twitch bot
-        bot = TwitchBot(secrets["TWITCH_OAUTH_TOKEN"], secrets["TWITCH_CHANNEL"])
+        bot = TwitchBot(refreshed_token, secrets["TWITCH_CHANNEL"])
         threading.Thread(target=start_twitch_app, args=(), daemon=True).start()
     # Run the Flask app
     # app = Flask(__name__)
